@@ -2,6 +2,17 @@
 -- Run this in the Supabase SQL editor to set up the database.
 
 -- ─────────────────────────────────────────────
+-- ADMINS (must be created before customers so policies can reference it)
+-- ─────────────────────────────────────────────
+create table if not exists public.admins (
+  id       uuid primary key default gen_random_uuid(),
+  user_id  uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz default now()
+);
+
+alter table public.admins enable row level security;
+
+-- ─────────────────────────────────────────────
 -- CUSTOMERS (linked to auth.users)
 -- ─────────────────────────────────────────────
 create table if not exists public.customers (
@@ -32,17 +43,6 @@ create policy "Admins can view all customers"
   using (exists (
     select 1 from public.admins where user_id = auth.uid()
   ));
-
--- ─────────────────────────────────────────────
--- ADMINS
--- ─────────────────────────────────────────────
-create table if not exists public.admins (
-  id       uuid primary key default gen_random_uuid(),
-  user_id  uuid not null references auth.users(id) on delete cascade,
-  created_at timestamptz default now()
-);
-
-alter table public.admins enable row level security;
 
 -- ─────────────────────────────────────────────
 -- SERVICES
