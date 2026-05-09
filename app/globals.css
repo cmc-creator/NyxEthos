@@ -213,3 +213,18 @@ body {
   }
 }
 
+/* ── Waitlist modal input focus styling (outside @layer for specificity) ── */
+.nyx-input {
+  background: rgba(6, 7, 15, 0.80);
+  border: 1px solid rgba(30, 95, 232, 0.28);
+  color: #eef0ff;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.nyx-input::placeholder {
+  color: #484b78;
+}
+.nyx-input:focus {
+  border-color: rgba(168, 85, 247, 0.60);
+}
+

@@ -180,18 +180,7 @@ export default function WaitlistModal() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Jane Smith"
-                  className="w-full rounded-lg text-nyx-white placeholder:text-nyx-muted text-sm px-3.5 py-2.5 outline-none transition-colors"
-                  style={{
-                    background: "rgba(6,7,15,0.80)",
-                    border: "1px solid rgba(30,95,232,0.28)",
-                    color: "#eef0ff",
-                  }}
-                  onFocus={(e) =>
-                    (e.currentTarget.style.borderColor = "rgba(168,85,247,0.60)")
-                  }
-                  onBlur={(e) =>
-                    (e.currentTarget.style.borderColor = "rgba(30,95,232,0.28)")
-                  }
+                  className="nyx-input w-full rounded-lg text-sm px-3.5 py-2.5"
                 />
               </div>
 
@@ -211,18 +200,7 @@ export default function WaitlistModal() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="jane@company.com"
-                  className="w-full rounded-lg text-nyx-white placeholder:text-nyx-muted text-sm px-3.5 py-2.5 outline-none transition-colors"
-                  style={{
-                    background: "rgba(6,7,15,0.80)",
-                    border: "1px solid rgba(30,95,232,0.28)",
-                    color: "#eef0ff",
-                  }}
-                  onFocus={(e) =>
-                    (e.currentTarget.style.borderColor = "rgba(168,85,247,0.60)")
-                  }
-                  onBlur={(e) =>
-                    (e.currentTarget.style.borderColor = "rgba(30,95,232,0.28)")
-                  }
+                  className="nyx-input w-full rounded-lg text-sm px-3.5 py-2.5"
                 />
               </div>
 
@@ -240,18 +218,7 @@ export default function WaitlistModal() {
                   value={company}
                   onChange={(e) => setCompany(e.target.value)}
                   placeholder="Acme Corp"
-                  className="w-full rounded-lg text-nyx-white placeholder:text-nyx-muted text-sm px-3.5 py-2.5 outline-none transition-colors"
-                  style={{
-                    background: "rgba(6,7,15,0.80)",
-                    border: "1px solid rgba(30,95,232,0.28)",
-                    color: "#eef0ff",
-                  }}
-                  onFocus={(e) =>
-                    (e.currentTarget.style.borderColor = "rgba(168,85,247,0.60)")
-                  }
-                  onBlur={(e) =>
-                    (e.currentTarget.style.borderColor = "rgba(30,95,232,0.28)")
-                  }
+                  className="nyx-input w-full rounded-lg text-sm px-3.5 py-2.5"
                 />
               </div>
 

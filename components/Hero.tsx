@@ -3,6 +3,13 @@
 import { ArrowRight, ShieldCheck, Sparkles, Zap } from "lucide-react";
 import { useWaitlist } from "@/context/WaitlistContext";
 
+/** Jewel-tone gradients cycled across the headcount bar chart */
+const BAR_GRADIENTS = [
+  "linear-gradient(to top, #1e5fe8, #4d8fff)", // sapphire
+  "linear-gradient(to top, #6d28d9, #a855f7)", // amethyst
+  "linear-gradient(to top, #047857, #10b981)", // emerald
+] as const;
+
 export default function Hero() {
   const { open } = useWaitlist();
   return (
@@ -247,12 +254,7 @@ export default function Hero() {
                       className="flex-1 rounded-t transition-all duration-300"
                       style={{
                         height: `${h}%`,
-                        background:
-                          i % 3 === 0
-                            ? "linear-gradient(to top, #1e5fe8, #4d8fff)"
-                            : i % 3 === 1
-                            ? "linear-gradient(to top, #6d28d9, #a855f7)"
-                            : "linear-gradient(to top, #047857, #10b981)",
+                        background: BAR_GRADIENTS[i % BAR_GRADIENTS.length],
                         opacity: 0.55 + (h / 110) * 0.45,
                       }}
                     />
