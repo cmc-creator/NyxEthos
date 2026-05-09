@@ -54,7 +54,7 @@ export default function Navbar() {
         {/* CTA */}
         <div className="hidden md:flex items-center gap-3">
           <a
-            href="/dashboard"
+            href="/sign-in"
             className="text-xs font-medium text-nyx-text hover:text-nyx-white transition-colors tracking-wide"
           >
             Sign In

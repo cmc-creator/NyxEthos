@@ -1,16 +1,9 @@
-import type { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import AppSidebar from "@/components/AppSidebar";
 
-export const metadata: Metadata = {
-  title: "Dashboard – NyxEthos",
-  description: "NyxEthos HR Platform",
-  robots: { index: false },
-};
-
-export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default async function EmployeesLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/sign-in");
 

@@ -1,172 +1,126 @@
-"use client";
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import Link from "next/link";
+import { Users, UserCheck, Building2, CalendarDays, Plus, ChevronRight } from "lucide-react";
 
-import { useState } from "react";
-import {
-  UserPlus, DollarSign, Clock, Heart,
-  Star, FileCheck, FolderOpen, CalendarDays,
-  Check, ChevronRight, LayoutDashboard,
-} from "lucide-react";
-import Logo from "@/components/Logo";
+export default async function DashboardPage() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.orgId) redirect("/sign-in");
 
-const ALL_MODULES = [
-  { id: "onboarding", icon: UserPlus, title: "Employee Onboarding", desc: "Automate day-one tasks, e-signatures, and role tracks." },
-  { id: "payroll", icon: DollarSign, title: "Payroll", desc: "Multi-state payroll, direct deposit, and tax filings." },
-  { id: "time", icon: Clock, title: "Time & Attendance", desc: "Web/mobile clock-in, overtime alerts, payroll sync." },
-  { id: "benefits", icon: Heart, title: "Benefits Management", desc: "Self-enrollment, open enrollment, carrier integrations." },
-  { id: "performance", icon: Star, title: "Performance Reviews", desc: "360° reviews, goal tracking, custom templates." },
-  { id: "compliance", icon: FileCheck, title: "Compliance & Reporting", desc: "EEOC, ACA, real-time policy alerts." },
-  { id: "documents", icon: FolderOpen, title: "Document Management", desc: "Version control, access permissions, expiry reminders." },
-  { id: "pto", icon: CalendarDays, title: "PTO & Leave Tracking", desc: "Custom policies, FMLA, team calendar." },
-];
+  const orgId = session.user.orgId;
 
-type Step = "welcome" | "modules" | "done";
+  const [total, active, departments, recent] = await Promise.all([
+    prisma.employee.count({ where: { orgId } }),
+    prisma.employee.count({ where: { orgId, status: "ACTIVE" } }),
+    prisma.employee.groupBy({ by: ["department"], where: { orgId, department: { not: null } } }),
+    prisma.employee.findMany({
+      where: { orgId },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: { id: true, firstName: true, lastName: true, jobTitle: true, department: true, status: true, createdAt: true },
+    }),
+  ]);
 
-export default function DashboardPage() {
-  const [step, setStep] = useState<Step>("welcome");
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-
-  function toggle(id: string) {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }
+  const stats = [
+    { label: "Total Employees", value: total, icon: Users, color: "#2570f5" },
+    { label: "Active", value: active, icon: UserCheck, color: "#22c55e" },
+    { label: "Departments", value: departments.length, icon: Building2, color: "#a855f7" },
+    { label: "Added This Month", value: recent.filter(e => {
+        const d = new Date(e.createdAt);
+        const now = new Date();
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      }).length, icon: CalendarDays, color: "#f59e0b" },
+  ];
 
   return (
-    <div className="min-h-screen bg-nyx-bg flex flex-col">
-      {/* Top bar */}
-      <header className="h-14 border-b border-nyx-border bg-nyx-surface flex items-center px-6 gap-4">
-        <a href="/" className="mr-auto">
-          <Logo size="sm" />
-        </a>
-        <span className="text-nyx-muted text-xs">Setup Wizard</span>
-      </header>
+    <div className="p-8 max-w-6xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-nyx-white text-2xl font-extrabold tracking-tight">Dashboard</h1>
+          <p className="text-nyx-muted text-sm mt-1">Welcome back, {session.user.name}</p>
+        </div>
+        <Link
+          href="/employees/new"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-colors"
+          style={{ background: "linear-gradient(135deg,#2570f5,#4d8fff)", boxShadow: "0 0 20px rgba(37,112,245,0.35)" }}
+        >
+          <Plus size={15} />
+          Add Employee
+        </Link>
+      </div>
 
-      <main className="flex-1 flex items-center justify-center px-6 py-16">
-        {step === "welcome" && (
-          <div className="max-w-lg w-full text-center">
-            <div className="w-16 h-16 rounded-2xl bg-nyx-blue mx-auto flex items-center justify-center mb-6 shadow-blue-glow">
-              <LayoutDashboard size={28} className="text-white" />
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {stats.map(({ label, value, icon: Icon, color }) => (
+          <div key={label} className="rounded-2xl p-5 border"
+            style={{ background: "rgba(10,24,50,0.7)", borderColor: "rgba(37,112,245,0.18)" }}>
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-nyx-muted text-xs font-medium">{label}</span>
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+                style={{ background: color + "22", border: "1px solid " + color + "44" }}>
+                <Icon size={15} style={{ color }} />
+              </div>
             </div>
-            <h1 className="text-nyx-white text-3xl font-extrabold tracking-tight mb-3">
-              Welcome to NyxEthos
-            </h1>
-            <p className="text-nyx-text text-base mb-8">
-              Let&apos;s get your workspace set up. First, choose the HR modules
-              your team actually needs. You can add or remove them any time.
-            </p>
-            <button
-              onClick={() => setStep("modules")}
-              className="inline-flex items-center gap-2 px-7 py-3.5 bg-nyx-blue hover:bg-nyx-blue-bright text-white font-semibold rounded-xl transition-colors shadow-blue-glow"
-            >
-              Choose Your Modules
-              <ChevronRight size={18} />
-            </button>
+            <p className="text-nyx-white text-3xl font-extrabold">{value}</p>
           </div>
-        )}
+        ))}
+      </div>
 
-        {step === "modules" && (
-          <div className="max-w-3xl w-full">
-            <div className="text-center mb-10">
-              <h2 className="text-nyx-white text-2xl font-extrabold tracking-tight mb-2">
-                Select Your Modules
-              </h2>
-              <p className="text-nyx-text text-sm">
-                Pick the tools you need now. Add more later from Settings.
-              </p>
-            </div>
+      {/* Recent employees */}
+      <div className="rounded-2xl border overflow-hidden"
+        style={{ background: "rgba(10,24,50,0.7)", borderColor: "rgba(37,112,245,0.18)" }}>
+        <div className="flex items-center justify-between px-6 py-4 border-b"
+          style={{ borderColor: "rgba(37,112,245,0.14)" }}>
+          <h2 className="text-nyx-white font-semibold text-sm">Recent Employees</h2>
+          <Link href="/employees" className="flex items-center gap-1 text-nyx-muted hover:text-nyx-white text-xs transition-colors">
+            View all <ChevronRight size={13} />
+          </Link>
+        </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
-              {ALL_MODULES.map((mod) => {
-                const Icon = mod.icon;
-                const active = selected.has(mod.id);
-                return (
-                  <button
-                    key={mod.id}
-                    onClick={() => toggle(mod.id)}
-                    className={`relative text-left rounded-2xl border p-5 transition-all duration-200 ${
-                      active
-                        ? "border-nyx-blue bg-nyx-card shadow-card-hover"
-                        : "border-nyx-border bg-nyx-card hover:border-nyx-blue/50"
-                    }`}
-                  >
-                    {active && (
-                      <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-nyx-blue flex items-center justify-center">
-                        <Check size={11} className="text-white" strokeWidth={3} />
-                      </div>
-                    )}
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center border ${active ? "border-nyx-blue bg-nyx-bg" : "border-nyx-border bg-nyx-bg"}`}>
-                        <Icon size={18} className={active ? "text-nyx-blue-bright" : "text-nyx-muted"} />
-                      </div>
-                      <span className={`font-semibold text-sm ${active ? "text-nyx-white" : "text-nyx-text"}`}>
-                        {mod.title}
-                      </span>
-                    </div>
-                    <p className="text-nyx-muted text-xs leading-relaxed">{mod.desc}</p>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-nyx-muted text-sm">
-                {selected.size} module{selected.size !== 1 ? "s" : ""} selected
-              </span>
-              <button
-                onClick={() => selected.size > 0 && setStep("done")}
-                disabled={selected.size === 0}
-                className="flex items-center gap-2 px-6 py-3 bg-nyx-blue hover:bg-nyx-blue-bright disabled:opacity-40 text-white font-semibold text-sm rounded-xl transition-colors shadow-blue-glow"
-              >
-                Confirm &amp; Continue
-                <ChevronRight size={16} />
-              </button>
-            </div>
+        {recent.length === 0 ? (
+          <div className="px-6 py-12 text-center">
+            <Users size={32} className="mx-auto mb-3 opacity-30 text-nyx-muted" />
+            <p className="text-nyx-muted text-sm">No employees yet.</p>
+            <Link href="/employees/new" className="inline-block mt-4 text-sm text-nyx-blue-bright hover:underline">
+              Add your first employee →
+            </Link>
           </div>
-        )}
-
-        {step === "done" && (
-          <div className="max-w-lg w-full text-center">
-            <div className="w-16 h-16 rounded-full bg-nyx-blue/20 border border-nyx-blue mx-auto flex items-center justify-center mb-6">
-              <Check size={32} className="text-nyx-blue-bright" />
-            </div>
-            <h2 className="text-nyx-white text-3xl font-extrabold tracking-tight mb-3">
-              You&apos;re all set!
-            </h2>
-            <p className="text-nyx-text text-base mb-3">
-              Your workspace is being configured with{" "}
-              <span className="text-nyx-white font-semibold">{selected.size} module{selected.size !== 1 ? "s" : ""}</span>:
-            </p>
-            <div className="flex flex-wrap justify-center gap-2 mb-8">
-              {ALL_MODULES.filter((m) => selected.has(m.id)).map((m) => (
-                <span key={m.id} className="px-3 py-1 rounded-full bg-nyx-card border border-nyx-border text-nyx-text text-xs">
-                  {m.title}
-                </span>
+        ) : (
+          <table className="w-full">
+            <thead>
+              <tr style={{ borderBottom: "1px solid rgba(37,112,245,0.1)" }}>
+                {["Name", "Job Title", "Department", "Status"].map(h => (
+                  <th key={h} className="px-6 py-3 text-left text-xs font-semibold text-nyx-muted uppercase tracking-wider">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {recent.map((emp) => (
+                <tr key={emp.id} className="group transition-colors hover:bg-white/[0.02]">
+                  <td className="px-6 py-3.5">
+                    <Link href={`/employees/${emp.id}`} className="text-nyx-white text-sm font-medium hover:text-nyx-blue-bright transition-colors">
+                      {emp.firstName} {emp.lastName}
+                    </Link>
+                  </td>
+                  <td className="px-6 py-3.5 text-nyx-muted text-sm">{emp.jobTitle || "—"}</td>
+                  <td className="px-6 py-3.5 text-nyx-muted text-sm">{emp.department || "—"}</td>
+                  <td className="px-6 py-3.5">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                      style={emp.status === "ACTIVE"
+                        ? { background: "rgba(34,197,94,0.15)", color: "#86efac" }
+                        : { background: "rgba(148,163,184,0.12)", color: "#94a3b8" }}>
+                      {emp.status}
+                    </span>
+                  </td>
+                </tr>
               ))}
-            </div>
-            <p className="text-nyx-muted text-sm mb-8">
-              This is a preview. Full functionality is coming soon  -  we&apos;ll
-              email you at <span className="text-nyx-text">info@nyxethos.com</span> when
-              your account is ready.
-            </p>
-            <div className="flex gap-3 justify-center">
-              <button
-                onClick={() => { setStep("modules"); }}
-                className="px-5 py-2.5 border border-nyx-border bg-nyx-card hover:border-nyx-blue text-nyx-text hover:text-nyx-white text-sm font-medium rounded-xl transition-colors"
-              >
-                Back
-              </button>
-              <a
-                href="/"
-                className="px-5 py-2.5 bg-nyx-blue hover:bg-nyx-blue-bright text-white text-sm font-semibold rounded-xl transition-colors shadow-blue-glow"
-              >
-                Back to Home
-              </a>
-            </div>
-          </div>
+            </tbody>
+          </table>
         )}
-      </main>
+      </div>
     </div>
   );
 }

@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(cuid())
+  name         String?
+  email        String        @unique
+  password     String?
+  image        String?
+  role         String        @default("admin")
+  orgId        String?
+  organization Organization? @relation(fields: [orgId], references: [id])
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Organization {
+  id        String     @id @default(cuid())
+  name      String
+  users     User[]
+  employees Employee[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Employee {
+  id             String       @id @default(cuid())
+  firstName      String
+  lastName       String
+  email          String
+  phone          String?
+  department     String?
+  jobTitle       String?
+  startDate      DateTime?
+  status         String       @default("active")
+  employmentType String       @default("full-time")
+  salary         Float?
+  orgId          String
+  organization   Organization @relation(fields: [orgId], references: [id])
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
