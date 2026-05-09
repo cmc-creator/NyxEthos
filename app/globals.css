@@ -1,0 +1,68 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --nyx-bg: #040d1a;
+  --nyx-surface: #071428;
+  --nyx-blue: #1d6fe8;
+  --nyx-blue-bright: #3b8bff;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #040d1a;
+  color: #c8d8f0;
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #040d1a;
+}
+::-webkit-scrollbar-thumb {
+  background: #1d6fe8;
+  border-radius: 3px;
+}
+
+/* Selection */
+::selection {
+  background: rgba(29, 111, 232, 0.35);
+  color: #f0f6ff;
+}
+
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(135deg, #f0f6ff 0%, #3b8bff 60%, #1d6fe8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .border-glow {
+    border: 1px solid rgba(29, 111, 232, 0.3);
+    box-shadow: 0 0 0 1px rgba(29, 111, 232, 0.1) inset;
+  }
+
+  .glass {
+    background: rgba(7, 20, 40, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+}
