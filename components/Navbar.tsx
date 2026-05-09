@@ -27,7 +27,7 @@ export default function Navbar() {
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "glass border-b border-nyx-border shadow-blue-glow"
+          ? "glass border-b border-nyx-border shadow-[0_0_30px_rgba(37,112,245,0.08)]"
           : "bg-transparent"
       }`}
     >
@@ -43,7 +43,7 @@ export default function Navbar() {
             <li key={link.href}>
               <a
                 href={link.href}
-                className="text-nyx-muted hover:text-nyx-white text-sm font-medium transition-colors duration-200"
+                className="text-nyx-muted hover:text-nyx-white text-xs font-medium transition-colors duration-200 tracking-wide"
               >
                 {link.label}
               </a>
@@ -55,13 +55,13 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-3">
           <a
             href="/dashboard"
-            className="text-sm font-medium text-nyx-text hover:text-nyx-white transition-colors"
+            className="text-xs font-medium text-nyx-muted hover:text-nyx-white transition-colors tracking-wide"
           >
             Sign In
           </a>
           <button
             onClick={() => open()}
-            className="px-4 py-2 rounded-lg bg-nyx-blue hover:bg-nyx-blue-bright text-white text-sm font-semibold transition-colors duration-200 shadow-blue-glow"
+            className="px-5 py-2.5 rounded-full bg-gradient-to-r from-nyx-blue to-nyx-blue-bright hover:from-nyx-blue-bright hover:to-nyx-blue text-white text-xs font-semibold transition-all duration-300 shadow-btn-primary hover:shadow-btn-primary-hover tracking-wide"
           >
             Start Free Trial
           </button>

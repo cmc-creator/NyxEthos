@@ -32,7 +32,7 @@ export default function Footer() {
   return (
     <footer
       id="about"
-      className="border-t border-nyx-border bg-nyx-surface px-6 py-16"
+      className="border-t border-nyx-border bg-nyx-surface/60 px-6 py-16"
     >
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-12 mb-12">
@@ -63,7 +63,7 @@ export default function Footer() {
           {/* Link columns */}
           {Object.entries(footerLinks).map(([group, links]) => (
             <div key={group}>
-              <h4 className="text-nyx-white font-semibold text-sm mb-4">
+              <h4 className="font-heading text-nyx-white font-semibold text-xs tracking-widest uppercase mb-4">
                 {group}
               </h4>
               <ul className="space-y-2.5">

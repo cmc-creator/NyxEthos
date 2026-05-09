@@ -74,13 +74,13 @@ export default function Modules() {
       <div className="max-w-7xl mx-auto">
         {/* Section header */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-nyx-border bg-nyx-surface text-nyx-blue-bright text-xs font-semibold tracking-wide mb-5">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card shine-border border border-nyx-border text-nyx-blue-bright text-xs font-semibold tracking-widest uppercase mb-6">
             Modular by Design
           </div>
-          <h2 className="text-4xl md:text-5xl font-extrabold text-nyx-white tracking-tight mb-4">
+          <h2 className="font-heading text-4xl md:text-5xl font-bold text-nyx-white tracking-[-0.03em] mb-4">
             Activate Only What You Need
           </h2>
-          <p className="text-nyx-text text-lg max-w-2xl mx-auto">
+          <p className="text-nyx-text text-lg max-w-2xl mx-auto font-light leading-relaxed">
             Every NyxEthos module is a standalone building block. Start with one,
             stack more as you grow. Never pay for features you don&apos;t use.
           </p>
@@ -93,16 +93,22 @@ export default function Modules() {
             return (
               <div
                 key={mod.title}
-                className="group relative rounded-2xl border border-nyx-border bg-nyx-card p-6 transition-all duration-300 hover:border-nyx-blue hover:shadow-card-hover cursor-default overflow-hidden"
+                className="group relative rounded-2xl glass-card shine-border border border-nyx-border p-6 transition-all duration-300 hover:border-nyx-border-bright hover:shadow-card-hover hover:-translate-y-1 cursor-default overflow-hidden"
               >
-                {/* Subtle gradient overlay on hover */}
+                {/* Hover glow overlay */}
                 <div className="absolute inset-0 bg-card-gradient opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-2xl" />
 
                 <div className="relative z-10">
-                  <div className="w-10 h-10 rounded-xl bg-nyx-bg border border-nyx-border flex items-center justify-center mb-4 group-hover:border-nyx-blue transition-colors duration-300">
-                    <Icon size={20} className="text-nyx-blue group-hover:text-nyx-blue-bright transition-colors duration-300" />
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-5 transition-all duration-300"
+                    style={{
+                      background: "linear-gradient(135deg, rgba(37,112,245,0.18) 0%, rgba(99,102,241,0.12) 100%)",
+                      border: "1px solid rgba(37,112,245,0.25)",
+                      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07)",
+                    }}
+                  >
+                    <Icon size={18} className="text-nyx-blue-bright group-hover:text-white transition-colors duration-300" />
                   </div>
-                  <h3 className="text-nyx-white font-semibold text-base mb-2">
+                  <h3 className="font-heading text-nyx-white font-semibold text-sm tracking-wide mb-2">
                     {mod.title}
                   </h3>
                   <p className="text-nyx-muted text-sm leading-relaxed mb-4">
@@ -112,7 +118,7 @@ export default function Modules() {
                     {mod.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="px-2 py-0.5 rounded-full text-xs bg-nyx-bg border border-nyx-border text-nyx-muted group-hover:border-nyx-blue/40 group-hover:text-nyx-text transition-colors duration-300"
+                        className="px-2.5 py-0.5 rounded-full text-xs tracking-wide glass-card border border-nyx-border text-nyx-muted group-hover:border-nyx-blue/40 group-hover:text-nyx-text transition-all duration-300"
                       >
                         {tag}
                       </span>

@@ -68,18 +68,23 @@ export default function Pricing() {
   const { open } = useWaitlist();
   return (
     <section id="pricing" className="py-24 px-6 relative">
-      <div className="absolute inset-0 bg-hero-gradient opacity-50 pointer-events-none" />
+      {/* Background orbs */}
+      <div className="absolute inset-0 bg-hero-gradient opacity-40 pointer-events-none" />
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] rounded-full pointer-events-none"
+        style={{ background: "rgba(37,112,245,0.10)", filter: "blur(120px)" }}
+      />
 
       <div className="max-w-6xl mx-auto relative z-10">
         {/* Section header */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-nyx-border bg-nyx-surface text-nyx-blue-bright text-xs font-semibold tracking-wide mb-5">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card shine-border border border-nyx-border text-nyx-blue-bright text-xs font-semibold tracking-widest uppercase mb-6">
             Transparent Pricing
           </div>
-          <h2 className="text-4xl md:text-5xl font-extrabold text-nyx-white tracking-tight mb-4">
+          <h2 className="font-heading text-4xl md:text-5xl font-bold text-nyx-white tracking-[-0.03em] mb-4">
             Pay for What You Use
           </h2>
-          <p className="text-nyx-text text-lg max-w-2xl mx-auto">
+          <p className="text-nyx-text text-lg max-w-2xl mx-auto font-light leading-relaxed">
             No hidden fees, no annual lock-in surprises. Every plan includes a
             14-day free trial with full module access.
           </p>
@@ -90,24 +95,37 @@ export default function Pricing() {
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`relative rounded-2xl border p-8 flex flex-col transition-all duration-300 ${
-                plan.highlighted
-                  ? "border-nyx-blue bg-nyx-card shadow-[0_0_60px_rgba(29,111,232,0.18)]"
-                  : "border-nyx-border bg-nyx-card hover:border-nyx-blue/50"
-              }`}
+              className="relative rounded-2xl p-8 flex flex-col transition-all duration-300 hover:-translate-y-1"
+              style={plan.highlighted ? {
+                background: "linear-gradient(145deg, rgba(18,38,72,0.98) 0%, rgba(10,24,50,0.99) 100%)",
+                border: "1px solid rgba(37,112,245,0.55)",
+                boxShadow: "0 0 0 1px rgba(77,143,255,0.2), 0 0 80px rgba(37,112,245,0.25), 0 20px 60px rgba(0,0,0,0.5)",
+              } : {
+                background: "linear-gradient(145deg, rgba(14,30,58,0.95) 0%, rgba(9,20,40,0.98) 100%)",
+                border: "1px solid rgba(37,112,245,0.18)",
+                boxShadow: "0 8px 40px rgba(0,0,0,0.4)",
+              }}
             >
               {plan.highlighted && (
-                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-nyx-blue text-white text-xs font-bold tracking-wide whitespace-nowrap">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase whitespace-nowrap"
+                  style={{
+                    background: "linear-gradient(135deg, #c9a44a 0%, #f0d889 50%, #c9a44a 100%)",
+                    color: "#03090f",
+                    boxShadow: "0 0 24px rgba(201,164,74,0.35)",
+                  }}
+                >
                   Most Popular
                 </div>
               )}
 
               <div className="mb-6">
-                <p className="text-nyx-muted text-sm font-semibold tracking-widest uppercase mb-1">
+                <p className="font-heading text-nyx-muted text-xs font-semibold tracking-widest uppercase mb-3">
                   {plan.name}
                 </p>
                 <div className="flex items-end gap-2 mb-1">
-                  <span className="text-nyx-white text-4xl font-extrabold">
+                  <span className={`font-heading text-4xl font-bold tracking-tight ${
+                    plan.highlighted ? "text-gradient" : "text-nyx-white"
+                  }`}>
                     {plan.price}
                   </span>
                   {plan.price !== "Custom" && (
@@ -117,13 +135,15 @@ export default function Pricing() {
                 {plan.price === "Custom" && (
                   <p className="text-nyx-muted text-sm">{plan.per}</p>
                 )}
-                <p className="text-nyx-text text-sm mt-2">{plan.description}</p>
+                <p className="text-nyx-text text-sm mt-2 font-light">{plan.description}</p>
               </div>
 
               {/* Module count badge */}
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-nyx-bg border border-nyx-border mb-6">
-                <div className="w-2 h-2 rounded-full bg-nyx-blue-bright" />
-                <span className="text-nyx-text text-sm font-medium">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl glass-card border border-nyx-border mb-6">
+                <div className={`w-2 h-2 rounded-full ${
+                  plan.highlighted ? "bg-nyx-gold" : "bg-nyx-blue-bright"
+                }`} />
+                <span className="text-nyx-text text-sm font-medium font-heading">
                   {plan.moduleNote}
                 </span>
               </div>
@@ -133,8 +153,10 @@ export default function Pricing() {
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-2.5">
                     <Check
-                      size={15}
-                      className="text-nyx-blue-bright mt-0.5 flex-shrink-0"
+                      size={14}
+                      className={`mt-0.5 flex-shrink-0 ${
+                        plan.highlighted ? "text-nyx-gold" : "text-nyx-blue-bright"
+                      }`}
                     />
                     <span className="text-nyx-text text-sm">{feature}</span>
                   </li>
@@ -143,10 +165,10 @@ export default function Pricing() {
 
               <button
                 onClick={() => open(plan.name)}
-                className={`w-full py-3 rounded-xl text-sm font-semibold text-center transition-all duration-200 ${
+                className={`w-full py-3.5 rounded-full text-sm font-semibold text-center transition-all duration-300 tracking-wide ${
                   plan.highlighted
-                    ? "bg-nyx-blue hover:bg-nyx-blue-bright text-white shadow-blue-glow"
-                    : "bg-nyx-bg border border-nyx-border hover:border-nyx-blue text-nyx-text hover:text-nyx-white"
+                    ? "bg-gradient-to-r from-nyx-blue to-nyx-blue-bright text-white shadow-btn-primary hover:shadow-btn-primary-hover hover:-translate-y-0.5"
+                    : "glass-card border border-nyx-border hover:border-nyx-border-bright text-nyx-text hover:text-nyx-white"
                 }`}
               >
                 {plan.cta}
@@ -155,7 +177,7 @@ export default function Pricing() {
           ))}
         </div>
 
-        <p className="text-center text-nyx-muted text-sm mt-8">
+        <p className="text-center text-nyx-muted text-sm mt-8 tracking-wide">
           All plans include a 14-day free trial. No credit card required.
         </p>
       </div>

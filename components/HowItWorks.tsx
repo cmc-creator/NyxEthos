@@ -40,13 +40,13 @@ export default function HowItWorks() {
       <div className="max-w-6xl mx-auto relative z-10">
         {/* Section header */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-nyx-border bg-nyx-surface text-nyx-blue-bright text-xs font-semibold tracking-wide mb-5">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card shine-border border border-nyx-border text-nyx-blue-bright text-xs font-semibold tracking-widest uppercase mb-6">
             Simple by Design
           </div>
-          <h2 className="text-4xl md:text-5xl font-extrabold text-nyx-white tracking-tight mb-4">
+          <h2 className="font-heading text-4xl md:text-5xl font-bold text-nyx-white tracking-[-0.03em] mb-4">
             Up and Running in Minutes
           </h2>
-          <p className="text-nyx-text text-lg max-w-2xl mx-auto">
+          <p className="text-nyx-text text-lg max-w-2xl mx-auto font-light leading-relaxed">
             Getting started with NyxEthos doesn&apos;t require a consultant, a
             multi-week implementation, or a dedicated IT team.
           </p>
@@ -61,23 +61,31 @@ export default function HowItWorks() {
               <div key={step.step} className="relative flex flex-col">
                 {/* Connector line */}
                 {!isLast && (
-                  <div className="hidden lg:block absolute top-5 left-[calc(50%+24px)] right-0 h-px bg-nyx-border" />
+                  <div className="hidden lg:block absolute top-9 left-[calc(50%+32px)] right-0 h-px"
+                    style={{ background: "linear-gradient(to right, rgba(37,112,245,0.35), rgba(37,112,245,0.05))" }}
+                  />
                 )}
 
                 {/* Step number + icon */}
                 <div className="flex flex-col items-start mb-5">
-                  <span className="text-nyx-blue text-xs font-bold tracking-widest mb-3">
-                    STEP {step.step}
+                  <span className="font-heading text-nyx-blue/40 text-4xl font-bold tracking-tighter mb-3 leading-none">
+                    {step.step}
                   </span>
-                  <div className="w-12 h-12 rounded-2xl bg-nyx-card border border-nyx-border flex items-center justify-center mb-4 shadow-blue-glow">
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
+                    style={{
+                      background: "linear-gradient(135deg, rgba(37,112,245,0.18) 0%, rgba(99,102,241,0.12) 100%)",
+                      border: "1px solid rgba(37,112,245,0.28)",
+                      boxShadow: "0 0 24px rgba(37,112,245,0.12), inset 0 1px 0 rgba(255,255,255,0.07)",
+                    }}
+                  >
                     <Icon size={22} className="text-nyx-blue-bright" />
                   </div>
                 </div>
 
-                <h3 className="text-nyx-white font-semibold text-lg mb-2"
+                <h3 className="font-heading text-nyx-white font-semibold text-base tracking-wide mb-2"
                   dangerouslySetInnerHTML={{ __html: step.title }}
                 />
-                <p className="text-nyx-muted text-sm leading-relaxed"
+                <p className="text-nyx-muted text-sm leading-relaxed font-light"
                   dangerouslySetInnerHTML={{ __html: step.description }}
                 />
               </div>
@@ -86,17 +94,17 @@ export default function HowItWorks() {
         </div>
 
         {/* Social proof row */}
-        <div className="mt-20 rounded-2xl border border-nyx-border bg-nyx-card p-8 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+        <div className="mt-20 rounded-2xl glass-card shine-border border border-nyx-border p-8 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
           {[
             { metric: "< 30 min", label: "Average setup time" },
             { metric: "99.9%", label: "Uptime SLA" },
             { metric: "8 modules", label: "Fully independent, zero overlap" },
           ].map((item) => (
             <div key={item.label}>
-              <p className="text-4xl font-extrabold text-gradient mb-1">
+              <p className="font-heading text-4xl font-bold text-gradient tracking-tight mb-1">
                 {item.metric}
               </p>
-              <p className="text-nyx-muted text-sm">{item.label}</p>
+              <p className="text-nyx-muted text-sm tracking-wide">{item.label}</p>
             </div>
           ))}
         </div>
