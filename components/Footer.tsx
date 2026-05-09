@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Logo from "./Logo";
 
 const footerLinks = {
@@ -38,9 +39,9 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-12 mb-12">
           {/* Brand */}
           <div className="md:col-span-1">
-            <a href="/" className="inline-block mb-4">
+            <Link href="/" className="inline-block mb-4">
               <Logo size="sm" />
-            </a>
+            </Link>
             <p className="text-nyx-muted text-sm leading-relaxed mb-4">
               Modular HR software for growing teams. Built by{" "}
               <a

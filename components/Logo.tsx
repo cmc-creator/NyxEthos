@@ -1,14 +1,3 @@
-/**
- * NyxEthos Logo
- *
- * TO SWAP IN YOUR REAL LOGO:
- *   Replace the content inside the outer <div> with:
- *     <Image src="/logo.svg" alt="NyxEthos" width={120} height={32} priority />
- *   (drop your logo.svg into the /public folder)
- *
- * The `size` prop controls compact (navbar/footer) vs full display.
- */
-
 interface LogoProps {
   size?: "sm" | "md";
 }
@@ -19,9 +8,14 @@ export default function Logo({ size = "md" }: LogoProps) {
 
   return (
     <div className="flex items-center gap-2.5">
-      {/* ── LOGO MARK ── swap this div for <Image> when your logo is ready */}
+      {/* Logo mark */}
       <div
-        className={`${iconSize} rounded-lg bg-nyx-blue flex items-center justify-center shadow-blue-glow flex-shrink-0`}
+        className={`${iconSize} rounded-lg flex items-center justify-center flex-shrink-0`}
+        style={{
+          background: "linear-gradient(135deg, #1e5fe8 0%, #7c3aed 100%)",
+          boxShadow:
+            "0 0 20px rgba(124,58,237,0.45), 0 0 8px rgba(30,95,232,0.30), inset 0 1px 0 rgba(255,255,255,0.15)",
+        }}
       >
         <svg
           viewBox="0 0 24 24"
@@ -29,25 +23,35 @@ export default function Logo({ size = "md" }: LogoProps) {
           className="w-4 h-4"
           aria-hidden="true"
         >
-          {/* Stylised "NE" monogram — replace with your SVG paths */}
           <path
             d="M4 4h2.5l5.5 8V4H14v16h-2.5L6 12v8H4V4Z"
             fill="white"
-            fillOpacity={0.95}
+            fillOpacity={0.97}
           />
           <path
             d="M16 4h4v2h-2v4h2v2h-2v6h2v2h-4V4Z"
             fill="white"
-            fillOpacity={0.75}
+            fillOpacity={0.72}
           />
         </svg>
       </div>
-      {/* ── WORDMARK ── */}
+      {/* Wordmark */}
       <span
         className={`text-nyx-white font-semibold ${textSize} tracking-tight leading-none`}
       >
-        Nyx<span className="text-nyx-blue-bright">Ethos</span>
+        Nyx
+        <span
+          style={{
+            background: "linear-gradient(135deg, #a855f7, #4d8fff)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
+        >
+          Ethos
+        </span>
       </span>
     </div>
   );
 }
+

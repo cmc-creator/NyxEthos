@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   UserPlus, DollarSign, Clock, Heart,
   Star, FileCheck, FolderOpen, CalendarDays,
@@ -28,7 +29,7 @@ export default function DashboardPage() {
   function toggle(id: string) {
     setSelected((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) { next.delete(id); } else { next.add(id); }
       return next;
     });
   }
@@ -37,9 +38,9 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-nyx-bg flex flex-col">
       {/* Top bar */}
       <header className="h-14 border-b border-nyx-border bg-nyx-surface flex items-center px-6 gap-4">
-        <a href="/" className="mr-auto">
+        <Link href="/" className="mr-auto">
           <Logo size="sm" />
-        </a>
+        </Link>
         <span className="text-nyx-muted text-xs">Setup Wizard</span>
       </header>
 
@@ -157,12 +158,12 @@ export default function DashboardPage() {
               >
                 Back
               </button>
-              <a
+              <Link
                 href="/"
                 className="px-5 py-2.5 bg-nyx-blue hover:bg-nyx-blue-bright text-white text-sm font-semibold rounded-xl transition-colors shadow-blue-glow"
               >
                 Back to Home
-              </a>
+              </Link>
             </div>
           </div>
         )}

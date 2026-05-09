@@ -36,7 +36,9 @@ export default function WaitlistModal() {
   // Prevent body scroll when open
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [isOpen]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -81,13 +83,28 @@ export default function WaitlistModal() {
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-nyx-bg/80 backdrop-blur-sm"
+        className="absolute inset-0 bg-nyx-bg/85 backdrop-blur-sm"
         onClick={close}
         aria-hidden="true"
       />
 
       {/* Panel */}
-      <div className="relative w-full max-w-md rounded-2xl border border-nyx-border bg-nyx-card shadow-[0_0_80px_rgba(29,111,232,0.18)] p-8 z-10">
+      <div
+        className="relative w-full max-w-md rounded-2xl border p-8 z-10"
+        style={{
+          background:
+            "linear-gradient(145deg, rgba(18,14,44,0.99) 0%, rgba(8,9,22,0.99) 100%)",
+          borderColor: "rgba(124,58,237,0.45)",
+          boxShadow:
+            "0 0 100px rgba(124,58,237,0.22), 0 0 50px rgba(30,95,232,0.12), 0 30px 60px rgba(0,0,0,0.60)",
+        }}
+      >
+        {/* Amethyst glow top */}
+        <div
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-[280px] h-[120px] rounded-full pointer-events-none"
+          style={{ background: "rgba(124,58,237,0.20)", filter: "blur(60px)" }}
+        />
+
         {/* Close button */}
         <button
           onClick={close}
@@ -98,13 +115,18 @@ export default function WaitlistModal() {
         </button>
 
         {status === "success" ? (
-          <div className="text-center py-6">
-            <CheckCircle size={48} className="text-nyx-blue-bright mx-auto mb-4" />
-            <h2 className="text-nyx-white text-xl font-bold mb-2">You&apos;re on the list!</h2>
+          <div className="text-center py-6 relative z-10">
+            <CheckCircle size={48} className="text-nyx-emerald-bright mx-auto mb-4" />
+            <h2 className="text-nyx-white text-xl font-bold mb-2">
+              You&apos;re on the list!
+            </h2>
             <p className="text-nyx-text text-sm mb-6">{message}</p>
             <button
               onClick={close}
-              className="px-6 py-2.5 bg-nyx-blue hover:bg-nyx-blue-bright text-white text-sm font-semibold rounded-xl transition-colors"
+              className="px-6 py-2.5 text-white text-sm font-semibold rounded-xl transition-colors"
+              style={{
+                background: "linear-gradient(135deg, #1e5fe8, #7c3aed)",
+              }}
             >
               Close
             </button>
@@ -112,9 +134,19 @@ export default function WaitlistModal() {
         ) : (
           <>
             {/* Header */}
-            <div className="mb-6">
-              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-nyx-border bg-nyx-bg text-nyx-blue-bright text-xs font-semibold mb-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-nyx-blue-bright animate-pulse" />
+            <div className="mb-6 relative z-10">
+              <div
+                className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border text-xs font-semibold mb-3"
+                style={{
+                  background: "rgba(6,7,15,0.70)",
+                  borderColor: "rgba(168,85,247,0.40)",
+                  color: "#c4b5fd",
+                }}
+              >
+                <span
+                  className="w-1.5 h-1.5 rounded-full animate-pulse"
+                  style={{ background: "#a855f7" }}
+                />
                 {selectedPlan ? `${selectedPlan} Plan` : "Early Access"}
               </div>
               <h2 className="text-nyx-white text-2xl font-bold tracking-tight mb-1">
@@ -122,14 +154,22 @@ export default function WaitlistModal() {
               </h2>
               <p className="text-nyx-muted text-sm">
                 14 days free, no credit card required. We&apos;ll reach you at{" "}
-                <span className="text-nyx-text">info@nyxethos.com</span> with next steps.
+                <span className="text-nyx-text">info@nyxethos.com</span> with next
+                steps.
               </p>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} noValidate className="space-y-4">
+            <form
+              onSubmit={handleSubmit}
+              noValidate
+              className="space-y-4 relative z-10"
+            >
               <div>
-                <label htmlFor="wl-name" className="block text-xs font-medium text-nyx-text mb-1.5">
+                <label
+                  htmlFor="wl-name"
+                  className="block text-xs font-medium text-nyx-text mb-1.5"
+                >
                   Your Name
                 </label>
                 <input
@@ -140,13 +180,28 @@ export default function WaitlistModal() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Jane Smith"
-                  className="w-full rounded-lg bg-nyx-bg border border-nyx-border text-nyx-white placeholder:text-nyx-muted text-sm px-3.5 py-2.5 outline-none focus:border-nyx-blue focus:ring-1 focus:ring-nyx-blue transition-colors"
+                  className="w-full rounded-lg text-nyx-white placeholder:text-nyx-muted text-sm px-3.5 py-2.5 outline-none transition-colors"
+                  style={{
+                    background: "rgba(6,7,15,0.80)",
+                    border: "1px solid rgba(30,95,232,0.28)",
+                    color: "#eef0ff",
+                  }}
+                  onFocus={(e) =>
+                    (e.currentTarget.style.borderColor = "rgba(168,85,247,0.60)")
+                  }
+                  onBlur={(e) =>
+                    (e.currentTarget.style.borderColor = "rgba(30,95,232,0.28)")
+                  }
                 />
               </div>
 
               <div>
-                <label htmlFor="wl-email" className="block text-xs font-medium text-nyx-text mb-1.5">
-                  Work Email <span className="text-nyx-blue-bright">*</span>
+                <label
+                  htmlFor="wl-email"
+                  className="block text-xs font-medium text-nyx-text mb-1.5"
+                >
+                  Work Email{" "}
+                  <span style={{ color: "#a855f7" }}>*</span>
                 </label>
                 <input
                   id="wl-email"
@@ -156,12 +211,26 @@ export default function WaitlistModal() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="jane@company.com"
-                  className="w-full rounded-lg bg-nyx-bg border border-nyx-border text-nyx-white placeholder:text-nyx-muted text-sm px-3.5 py-2.5 outline-none focus:border-nyx-blue focus:ring-1 focus:ring-nyx-blue transition-colors"
+                  className="w-full rounded-lg text-nyx-white placeholder:text-nyx-muted text-sm px-3.5 py-2.5 outline-none transition-colors"
+                  style={{
+                    background: "rgba(6,7,15,0.80)",
+                    border: "1px solid rgba(30,95,232,0.28)",
+                    color: "#eef0ff",
+                  }}
+                  onFocus={(e) =>
+                    (e.currentTarget.style.borderColor = "rgba(168,85,247,0.60)")
+                  }
+                  onBlur={(e) =>
+                    (e.currentTarget.style.borderColor = "rgba(30,95,232,0.28)")
+                  }
                 />
               </div>
 
               <div>
-                <label htmlFor="wl-company" className="block text-xs font-medium text-nyx-text mb-1.5">
+                <label
+                  htmlFor="wl-company"
+                  className="block text-xs font-medium text-nyx-text mb-1.5"
+                >
                   Company
                 </label>
                 <input
@@ -171,7 +240,18 @@ export default function WaitlistModal() {
                   value={company}
                   onChange={(e) => setCompany(e.target.value)}
                   placeholder="Acme Corp"
-                  className="w-full rounded-lg bg-nyx-bg border border-nyx-border text-nyx-white placeholder:text-nyx-muted text-sm px-3.5 py-2.5 outline-none focus:border-nyx-blue focus:ring-1 focus:ring-nyx-blue transition-colors"
+                  className="w-full rounded-lg text-nyx-white placeholder:text-nyx-muted text-sm px-3.5 py-2.5 outline-none transition-colors"
+                  style={{
+                    background: "rgba(6,7,15,0.80)",
+                    border: "1px solid rgba(30,95,232,0.28)",
+                    color: "#eef0ff",
+                  }}
+                  onFocus={(e) =>
+                    (e.currentTarget.style.borderColor = "rgba(168,85,247,0.60)")
+                  }
+                  onBlur={(e) =>
+                    (e.currentTarget.style.borderColor = "rgba(30,95,232,0.28)")
+                  }
                 />
               </div>
 
@@ -182,7 +262,13 @@ export default function WaitlistModal() {
               <button
                 type="submit"
                 disabled={status === "loading"}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-nyx-blue hover:bg-nyx-blue-bright disabled:opacity-60 text-white font-semibold text-sm transition-colors shadow-blue-glow"
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white font-semibold text-sm transition-all disabled:opacity-60"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #1e5fe8 0%, #7c3aed 60%, #a855f7 100%)",
+                  boxShadow:
+                    "0 4px 24px rgba(124,58,237,0.50), inset 0 1px 0 rgba(255,255,255,0.15)",
+                }}
               >
                 {status === "loading" ? (
                   <>
@@ -207,3 +293,4 @@ export default function WaitlistModal() {
     </div>
   );
 }
+

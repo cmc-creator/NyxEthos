@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import Logo from "./Logo";
 import { useWaitlist } from "@/context/WaitlistContext";
@@ -27,15 +28,24 @@ export default function Navbar() {
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "glass border-b border-nyx-border shadow-[0_0_30px_rgba(37,112,245,0.08)]"
+          ? "border-b border-nyx-border shadow-[0_0_40px_rgba(124,58,237,0.08)]"
           : "bg-transparent"
       }`}
+      style={
+        scrolled
+          ? {
+              background: "rgba(6,7,15,0.88)",
+              backdropFilter: "blur(28px)",
+              WebkitBackdropFilter: "blur(28px)",
+            }
+          : {}
+      }
     >
       <nav className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
-        <a href="/" className="flex items-center gap-2.5 group">
+        <Link href="/" className="flex items-center gap-2.5 group">
           <Logo />
-        </a>
+        </Link>
 
         {/* Desktop links */}
         <ul className="hidden md:flex items-center gap-8">
@@ -51,7 +61,7 @@ export default function Navbar() {
           ))}
         </ul>
 
-        {/* CTA */}
+        {/* Desktop CTA */}
         <div className="hidden md:flex items-center gap-3">
           <a
             href="/dashboard"
@@ -61,7 +71,13 @@ export default function Navbar() {
           </a>
           <button
             onClick={() => open()}
-            className="px-5 py-2.5 rounded-full bg-gradient-to-r from-nyx-blue to-nyx-blue-bright hover:from-nyx-blue-bright hover:to-nyx-blue text-white text-xs font-semibold transition-all duration-300 shadow-btn-primary hover:shadow-btn-primary-hover tracking-wide"
+            className="px-5 py-2.5 rounded-full text-white text-xs font-semibold transition-all duration-300 tracking-wide hover:-translate-y-0.5"
+            style={{
+              background:
+                "linear-gradient(135deg, #1e5fe8 0%, #7c3aed 100%)",
+              boxShadow:
+                "0 4px 20px rgba(124,58,237,0.40), inset 0 1px 0 rgba(255,255,255,0.15)",
+            }}
           >
             Start Free Trial
           </button>
@@ -79,7 +95,14 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="md:hidden glass border-t border-nyx-border px-6 py-4 flex flex-col gap-4">
+        <div
+          className="md:hidden border-t border-nyx-border px-6 py-4 flex flex-col gap-4"
+          style={{
+            background: "rgba(6,7,15,0.96)",
+            backdropFilter: "blur(24px)",
+            WebkitBackdropFilter: "blur(24px)",
+          }}
+        >
           {navLinks.map((link) => (
             <a
               key={link.href}
@@ -91,8 +114,14 @@ export default function Navbar() {
             </a>
           ))}
           <button
-            onClick={() => { open(); setMenuOpen(false); }}
-            className="mt-2 px-4 py-2.5 rounded-lg bg-nyx-blue hover:bg-nyx-blue-bright text-white text-sm font-semibold transition-colors text-center"
+            onClick={() => {
+              open();
+              setMenuOpen(false);
+            }}
+            className="mt-2 px-4 py-2.5 rounded-lg text-white text-sm font-semibold transition-colors text-center"
+            style={{
+              background: "linear-gradient(135deg, #1e5fe8, #7c3aed)",
+            }}
           >
             Start Free Trial
           </button>
@@ -101,3 +130,4 @@ export default function Navbar() {
     </header>
   );
 }
+
