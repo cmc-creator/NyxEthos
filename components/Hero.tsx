@@ -7,7 +7,7 @@ export default function Hero() {
   const { open } = useWaitlist();
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center pt-16">
-      {/* Accent bar — top of hero */}
+      {/* Accent bar  -  top of hero */}
       <div className="absolute top-0 left-0 right-0 h-[3px] pointer-events-none"
         style={{ background: "linear-gradient(90deg, transparent 0%, #2570f5 25%, #6366f1 50%, #c9a44a 75%, transparent 100%)" }}
       />
@@ -18,11 +18,11 @@ export default function Hero() {
         className="absolute inset-0 bg-grid-pattern pointer-events-none"
         style={{ backgroundSize: "48px 48px" }}
       />
-      {/* Large blue orb — center top, INSIDE section */}
+      {/* Large blue orb  -  center top, INSIDE section */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[600px] rounded-full pointer-events-none"
         style={{ background: "rgba(37,112,245,0.55)", filter: "blur(120px)" }}
       />
-      {/* Violet orb — upper right, INSIDE section */}
+      {/* Violet orb  -  upper right, INSIDE section */}
       <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full pointer-events-none"
         style={{ background: "rgba(99,102,241,0.45)", filter: "blur(100px)" }}
       />
@@ -37,7 +37,7 @@ export default function Hero() {
         {/* Premium badge */}
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card shine-border border border-nyx-border text-nyx-blue-bright text-xs font-semibold tracking-widest uppercase mb-10">
           <Sparkles size={12} className="text-nyx-gold" />
-          Built by NyxCollective LLC — Pure HR, Zero Bloat
+          Built by NyxCollective LLC  -  Pure HR, Zero Bloat
           <span className="w-1.5 h-1.5 rounded-full bg-nyx-blue-bright animate-pulse" />
         </div>
 
@@ -61,8 +61,8 @@ export default function Hero() {
 
         {/* Subheadline */}
         <p className="text-nyx-text text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed font-light">
-          NyxEthos delivers every HR tool your team needs — onboarding, payroll,
-          compliance, and more — as modular building blocks. Activate only what
+          NyxEthos delivers every HR tool your team needs  -  onboarding, payroll,
+          compliance, and more  -  as modular building blocks. Activate only what
           you use. No bloat, no forced bundles.
         </p>
 

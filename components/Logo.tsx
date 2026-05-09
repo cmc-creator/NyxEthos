@@ -29,7 +29,7 @@ export default function Logo({ size = "md" }: LogoProps) {
           className="w-4 h-4"
           aria-hidden="true"
         >
-          {/* Stylised "NE" monogram — replace with your SVG paths */}
+          {/* Stylised "NE" monogram  -  replace with your SVG paths */}
           <path
             d="M4 4h2.5l5.5 8V4H14v16h-2.5L6 12v8H4V4Z"
             fill="white"

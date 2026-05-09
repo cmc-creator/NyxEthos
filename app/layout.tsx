@@ -4,9 +4,9 @@ import { WaitlistProvider } from "@/context/WaitlistContext";
 import WaitlistModal from "@/components/WaitlistModal";
 
 export const metadata: Metadata = {
-  title: "NyxEthos — Modular HR Software by NyxCollective",
+  title: "NyxEthos  -  Modular HR Software by NyxCollective",
   description:
-    "NyxEthos delivers exactly the HR tools your team needs — nothing more, nothing less. Onboarding, payroll, time tracking, compliance, and more — all in one modular platform.",
+    "NyxEthos delivers exactly the HR tools your team needs  -  nothing more, nothing less. Onboarding, payroll, time tracking, compliance, and more  -  all in one modular platform.",
   keywords: [
     "HR software",
     "human resources",
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "NyxCollective LLC", url: "https://nyxcollectivellc.com" }],
   openGraph: {
-    title: "NyxEthos — Modular HR Software",
+    title: "NyxEthos  -  Modular HR Software",
     description: "HR tools that fit exactly what you need. No bloat, no compromises.",
     url: "https://nyxethos.com",
     siteName: "NyxEthos",
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "NyxEthos — Modular HR Software",
+    title: "NyxEthos  -  Modular HR Software",
     description: "HR tools that fit exactly what you need. No bloat, no compromises.",
     images: ["/og-image.png"],
   },

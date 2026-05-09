@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "NyxEthos — Modular HR Software";
+export const alt = "NyxEthos  -  Modular HR Software";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -93,7 +93,7 @@ export default async function Image() {
               textAlign: "center",
             }}
           >
-            Modular HR Software — Pure HR, Zero Bloat
+            Modular HR Software  -  Pure HR, Zero Bloat
           </div>
           {/* Badge row */}
           <div style={{ display: "flex", gap: "16px", marginTop: "16px" }}>

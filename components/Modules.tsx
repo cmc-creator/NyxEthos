@@ -42,7 +42,7 @@ const modules = [
     icon: Star,
     title: "Performance Reviews",
     description:
-      "Schedule and run structured reviews — 360°, manager-led, or self-reviews. Track goals, ratings, and improvement plans over time.",
+      "Schedule and run structured reviews  -  360°, manager-led, or self-reviews. Track goals, ratings, and improvement plans over time.",
     tags: ["360° reviews", "Goal tracking", "Custom templates"],
   },
   {
@@ -56,7 +56,7 @@ const modules = [
     icon: FolderOpen,
     title: "Document Management",
     description:
-      "Centralize all HR documents — offer letters, policies, signed agreements — with version control, access permissions, and expiry reminders.",
+      "Centralize all HR documents  -  offer letters, policies, signed agreements  -  with version control, access permissions, and expiry reminders.",
     tags: ["Version control", "Access control", "Expiry alerts"],
   },
   {

@@ -13,7 +13,7 @@ const steps = [
     step: "02",
     title: "Configure Your Workspace",
     description:
-      "Set up your org structure, roles, pay schedules, and leave policies. NyxEthos adapts to how your business already runs — not the other way around.",
+      "Set up your org structure, roles, pay schedules, and leave policies. NyxEthos adapts to how your business already runs  -  not the other way around.",
   },
   {
     icon: Rocket,

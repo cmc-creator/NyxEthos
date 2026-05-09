@@ -146,7 +146,7 @@ export default function DashboardPage() {
               ))}
             </div>
             <p className="text-nyx-muted text-sm mb-8">
-              This is a preview. Full functionality is coming soon — we&apos;ll
+              This is a preview. Full functionality is coming soon  -  we&apos;ll
               email you at <span className="text-nyx-text">info@nyxethos.com</span> when
               your account is ready.
             </p>

@@ -66,7 +66,7 @@ export default function WaitlistModal() {
       }
     } catch {
       setStatus("error");
-      setMessage("Network error — please try again.");
+      setMessage("Network error  -  please try again.");
     }
   }
 
