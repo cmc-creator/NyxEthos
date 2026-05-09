@@ -21,7 +21,7 @@ const config: Config = {
           violet: "#6366f1",
           gold: "#c9a44a",
           "gold-dim": "#8a6b2f",
-          muted: "#3d5a7a",
+          muted: "#7a9fc0",
           text: "#b8cce8",
           white: "#eef5ff",
         },

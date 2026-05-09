@@ -43,7 +43,7 @@ export default function Navbar() {
             <li key={link.href}>
               <a
                 href={link.href}
-                className="text-nyx-muted hover:text-nyx-white text-xs font-medium transition-colors duration-200 tracking-wide"
+                className="text-nyx-text hover:text-nyx-white text-xs font-medium transition-colors duration-200 tracking-wide"
               >
                 {link.label}
               </a>
@@ -55,7 +55,7 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-3">
           <a
             href="/dashboard"
-            className="text-xs font-medium text-nyx-muted hover:text-nyx-white transition-colors tracking-wide"
+            className="text-xs font-medium text-nyx-text hover:text-nyx-white transition-colors tracking-wide"
           >
             Sign In
           </a>
