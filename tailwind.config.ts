@@ -10,11 +10,11 @@ const config: Config = {
     extend: {
       colors: {
         nyx: {
-          bg: "#03090f",
-          surface: "#060f1e",
-          card: "#081628",
-          border: "#0e2540",
-          "border-bright": "#1a3d6e",
+          bg: "#060e1e",
+          surface: "#0a1830",
+          card: "#102040",
+          border: "#1a3a6a",
+          "border-bright": "#2a5499",
           blue: "#2570f5",
           "blue-bright": "#4d8fff",
           "blue-glow": "#1a5cd4",
@@ -34,9 +34,9 @@ const config: Config = {
         "grid-pattern":
           "linear-gradient(rgba(37,112,245,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(37,112,245,0.06) 1px, transparent 1px)",
         "hero-gradient":
-          "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(37,112,245,0.45) 0%, transparent 65%)",
+          "radial-gradient(ellipse 90% 70% at 50% 20%, rgba(37,112,245,0.60) 0%, rgba(37,112,245,0.20) 40%, transparent 70%)",
         "hero-violet":
-          "radial-gradient(ellipse 60% 50% at 85% 15%, rgba(99,102,241,0.25) 0%, transparent 60%)",
+          "radial-gradient(ellipse 70% 60% at 90% 10%, rgba(99,102,241,0.45) 0%, rgba(99,102,241,0.10) 50%, transparent 70%)",
         "card-gradient":
           "linear-gradient(135deg, rgba(37,112,245,0.14) 0%, rgba(3,9,15,0) 100%)",
         "card-shine":

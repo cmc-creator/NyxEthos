@@ -6,7 +6,11 @@ import { useWaitlist } from "@/context/WaitlistContext";
 export default function Hero() {
   const { open } = useWaitlist();
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center pt-16 overflow-hidden">
+    <section className="relative min-h-screen flex flex-col items-center justify-center pt-16">
+      {/* Accent bar — top of hero */}
+      <div className="absolute top-0 left-0 right-0 h-[3px] pointer-events-none"
+        style={{ background: "linear-gradient(90deg, transparent 0%, #2570f5 25%, #6366f1 50%, #c9a44a 75%, transparent 100%)" }}
+      />
       {/* Background layers */}
       <div className="absolute inset-0 bg-hero-gradient pointer-events-none" />
       <div className="absolute inset-0 bg-hero-violet pointer-events-none" />
@@ -14,20 +18,20 @@ export default function Hero() {
         className="absolute inset-0 bg-grid-pattern pointer-events-none"
         style={{ backgroundSize: "48px 48px" }}
       />
-      {/* Large blue orb — center top */}
-      <div className="absolute top-[-100px] left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full pointer-events-none"
-        style={{ background: "rgba(37,112,245,0.22)", filter: "blur(100px)" }}
+      {/* Large blue orb — center top, INSIDE section */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[600px] rounded-full pointer-events-none"
+        style={{ background: "rgba(37,112,245,0.55)", filter: "blur(120px)" }}
       />
-      {/* Violet orb — upper right */}
-      <div className="absolute top-[-60px] right-[-80px] w-[520px] h-[520px] rounded-full pointer-events-none"
-        style={{ background: "rgba(99,102,241,0.18)", filter: "blur(90px)" }}
+      {/* Violet orb — upper right, INSIDE section */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full pointer-events-none"
+        style={{ background: "rgba(99,102,241,0.45)", filter: "blur(100px)" }}
       />
-      {/* Small bright core orb */}
-      <div className="absolute top-[80px] left-1/2 -translate-x-1/2 w-[300px] h-[200px] rounded-full pointer-events-none"
-        style={{ background: "rgba(77,143,255,0.15)", filter: "blur(60px)" }}
+      {/* Bright center core orb */}
+      <div className="absolute top-[100px] left-1/2 -translate-x-1/2 w-[320px] h-[220px] rounded-full pointer-events-none"
+        style={{ background: "rgba(77,143,255,0.40)", filter: "blur(70px)" }}
       />
       {/* Warm bottom fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-nyx-bg to-transparent pointer-events-none" />
+      <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-[#060e1e] to-transparent pointer-events-none" />
 
       <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
         {/* Premium badge */}

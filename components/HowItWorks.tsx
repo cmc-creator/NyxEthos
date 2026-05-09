@@ -33,7 +33,9 @@ const steps = [
 
 export default function HowItWorks() {
   return (
-    <section id="how-it-works" className="py-24 px-6 relative overflow-hidden">
+    <section id="how-it-works" className="py-24 px-6 relative overflow-hidden"
+      style={{ background: "linear-gradient(180deg, #060e1e 0%, #0a1830 50%, #060e1e 100%)" }}
+    >
       {/* Subtle divider line glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-full bg-gradient-to-b from-transparent via-nyx-border to-transparent pointer-events-none" />
 

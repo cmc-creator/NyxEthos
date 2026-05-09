@@ -97,12 +97,12 @@ export default function Pricing() {
               key={plan.name}
               className="relative rounded-2xl p-8 flex flex-col transition-all duration-300 hover:-translate-y-1"
               style={plan.highlighted ? {
-                background: "linear-gradient(145deg, rgba(18,38,72,0.98) 0%, rgba(10,24,50,0.99) 100%)",
-                border: "1px solid rgba(37,112,245,0.55)",
-                boxShadow: "0 0 0 1px rgba(77,143,255,0.2), 0 0 80px rgba(37,112,245,0.25), 0 20px 60px rgba(0,0,0,0.5)",
+                background: "linear-gradient(145deg, rgba(15,42,100,0.98) 0%, rgba(8,25,65,0.99) 100%)",
+                border: "2px solid rgba(77,143,255,0.70)",
+                boxShadow: "0 0 0 1px rgba(77,143,255,0.25), 0 0 100px rgba(37,112,245,0.40), 0 20px 60px rgba(37,112,245,0.20)",
               } : {
-                background: "linear-gradient(145deg, rgba(14,30,58,0.95) 0%, rgba(9,20,40,0.98) 100%)",
-                border: "1px solid rgba(37,112,245,0.18)",
+                background: "linear-gradient(145deg, rgba(22,52,106,0.90) 0%, rgba(12,28,62,0.95) 100%)",
+                border: "1px solid rgba(37,112,245,0.28)",
                 boxShadow: "0 8px 40px rgba(0,0,0,0.4)",
               }}
             >
@@ -110,8 +110,8 @@ export default function Pricing() {
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase whitespace-nowrap"
                   style={{
                     background: "linear-gradient(135deg, #c9a44a 0%, #f0d889 50%, #c9a44a 100%)",
-                    color: "#03090f",
-                    boxShadow: "0 0 24px rgba(201,164,74,0.35)",
+                    color: "#060e1e",
+                    boxShadow: "0 0 32px rgba(201,164,74,0.55)",
                   }}
                 >
                   Most Popular

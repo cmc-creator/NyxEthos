@@ -70,7 +70,9 @@ const modules = [
 
 export default function Modules() {
   return (
-    <section id="modules" className="py-24 px-6">
+    <section id="modules" className="py-24 px-6 relative"
+      style={{ background: "linear-gradient(180deg, #060e1e 0%, #081425 50%, #060e1e 100%)" }}
+    >
       <div className="max-w-7xl mx-auto">
         {/* Section header */}
         <div className="text-center mb-16">
