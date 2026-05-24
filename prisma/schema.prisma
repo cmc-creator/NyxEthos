@@ -30,19 +30,78 @@ model Organization {
 }
 
 model Employee {
-  id             String       @id @default(cuid())
-  firstName      String
-  lastName       String
-  email          String
-  phone          String?
-  department     String?
-  jobTitle       String?
-  startDate      DateTime?
-  status         String       @default("active")
-  employmentType String       @default("full-time")
-  salary         Float?
-  orgId          String
-  organization   Organization @relation(fields: [orgId], references: [id])
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  id                 String              @id @default(cuid())
+  firstName          String
+  lastName           String
+  email              String
+  phone              String?
+  department         String?
+  jobTitle           String?
+  startDate          DateTime?
+  status             String              @default("active")
+  employmentType     String              @default("full-time")
+  salary             Float?
+  orgId              String
+  organization       Organization        @relation(fields: [orgId], references: [id])
+  timeEntries        TimeEntry[]
+  leaveRequests      LeaveRequest[]
+  documents          Document[]
+  performanceReviews PerformanceReview[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+}
+
+model TimeEntry {
+  id         String   @id @default(cuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  orgId      String
+  date       DateTime
+  hours      Float
+  type       String   @default("regular")
+  note       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model LeaveRequest {
+  id         String   @id @default(cuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  orgId      String
+  type       String   @default("vacation")
+  startDate  DateTime
+  endDate    DateTime
+  days       Float    @default(1)
+  status     String   @default("pending")
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Document {
+  id         String    @id @default(cuid())
+  name       String
+  category   String    @default("other")
+  employeeId String?
+  employee   Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  orgId      String
+  fileUrl    String?
+  size       String?
+  uploadedAt DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model PerformanceReview {
+  id         String   @id @default(cuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  orgId      String
+  period     String
+  score      Float?
+  status     String   @default("scheduled")
+  notes      String?
+  reviewDate DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
