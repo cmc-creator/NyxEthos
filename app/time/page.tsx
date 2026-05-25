@@ -5,8 +5,8 @@ import { prisma } from "@/lib/db";
 import Link from "next/link";
 import { Clock, Users, Calendar, TrendingUp, Plus } from "lucide-react";
 
-function getOrgId(session: Awaited<ReturnType<typeof getServerSession>>): string | null {
-  return (session?.user as { orgId?: string })?.orgId ?? null;
+function getOrgId(session: { user?: { orgId?: string } } | null): string | null {
+  return session?.user?.orgId ?? null;
 }
 
 export default async function TimePage() {
@@ -38,11 +38,11 @@ export default async function TimePage() {
   const weekTotal = weekHours._sum.hours ?? 0;
   const monthTotal = monthHours._sum.hours ?? 0;
 
-  const typeColors: Record<string, { bg: string; text: string }> = {
-    regular: { bg: "rgba(37,112,245,0.12)", text: "#4d8fff" },
-    overtime: { bg: "rgba(251,191,36,0.12)", text: "#fbbf24" },
-    pto: { bg: "rgba(52,211,153,0.12)", text: "#34d399" },
-    sick: { bg: "rgba(239,68,68,0.12)", text: "#f87171" },
+  const typeColors: Record<string, React.CSSProperties> = {
+    regular: { backgroundColor: "rgba(37,112,245,0.12)", color: "#4d8fff" },
+    overtime: { backgroundColor: "rgba(251,191,36,0.12)", color: "#fbbf24" },
+    pto: { backgroundColor: "rgba(52,211,153,0.12)", color: "#34d399" },
+    sick: { backgroundColor: "rgba(239,68,68,0.12)", color: "#f87171" },
   };
 
   return (
@@ -76,18 +76,18 @@ export default async function TimePage() {
           { icon: TrendingUp, label: "Total Entries", value: String(recentEntries.length > 19 ? "20+" : recentEntries.length), sub: "Recent records shown", color: "amber" as const },
         ].map(({ icon: Icon, label, value, sub, color }) => {
           const palettes = {
-            blue: { bg: "rgba(37,112,245,0.15)", text: "#4d8fff", border: "rgba(37,112,245,0.25)" },
-            green: { bg: "rgba(52,211,153,0.12)", text: "#34d399", border: "rgba(52,211,153,0.25)" },
-            purple: { bg: "rgba(99,102,241,0.18)", text: "#818cf8", border: "rgba(99,102,241,0.25)" },
-            amber: { bg: "rgba(251,191,36,0.12)", text: "#fbbf24", border: "rgba(251,191,36,0.25)" },
+            blue: { backgroundColor: "rgba(37,112,245,0.15)", color: "#4d8fff", border: "rgba(37,112,245,0.25)" },
+            green: { backgroundColor: "rgba(52,211,153,0.12)", color: "#34d399", border: "rgba(52,211,153,0.25)" },
+            purple: { backgroundColor: "rgba(99,102,241,0.18)", color: "#818cf8", border: "rgba(99,102,241,0.25)" },
+            amber: { backgroundColor: "rgba(251,191,36,0.12)", color: "#fbbf24", border: "rgba(251,191,36,0.25)" },
           };
           const c = palettes[color];
           return (
             <div key={label} className="glass-card rounded-2xl p-5">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#7a9fc0" }}>{label}</span>
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: c.bg, border: `1px solid ${c.border}` }}>
-                  <Icon size={15} style={{ color: c.text }} />
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: c.backgroundColor, border: `1px solid ${c.border}` }}>
+                  <Icon size={15} style={{ color: c.color }} />
                 </div>
               </div>
               <p className="text-2xl font-bold font-heading" style={{ color: "#eef5ff" }}>{value}</p>
@@ -170,7 +170,7 @@ export default async function TimePage() {
                 <div className="col-span-2 flex items-center">
                   <span
                     className="text-xs px-2 py-0.5 rounded-full font-medium capitalize"
-                    style={typeColors[entry.type] ?? { bg: "rgba(37,112,245,0.1)", text: "#4d8fff" }}
+                    style={typeColors[entry.type] ?? { backgroundColor: "rgba(37,112,245,0.1)", color: "#4d8fff" }}
                   >
                     {entry.type}
                   </span>

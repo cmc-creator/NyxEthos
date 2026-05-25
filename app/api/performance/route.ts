@@ -3,8 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
-function getOrgId(session: Awaited<ReturnType<typeof getServerSession>>): string | null {
-  return (session?.user as { orgId?: string })?.orgId ?? null;
+function getOrgId(session: { user?: { orgId?: string } } | null): string | null {
+  return session?.user?.orgId ?? null;
 }
 
 export async function GET() {

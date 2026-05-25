@@ -9,8 +9,8 @@ import {
   DollarSign, Clock, CalendarDays, FileText, ArrowRight,
 } from "lucide-react";
 
-function getOrgId(session: Awaited<ReturnType<typeof getServerSession>>): string | null {
-  return (session?.user as { orgId?: string })?.orgId ?? null;
+function getOrgId(session: { user?: { orgId?: string } } | null): string | null {
+  return session?.user?.orgId ?? null;
 }
 
 function fmt(n: number) {

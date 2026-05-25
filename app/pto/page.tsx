@@ -5,8 +5,8 @@ import { prisma } from "@/lib/db";
 import Link from "next/link";
 import { CalendarDays, Clock, CheckCircle, XCircle, Plus } from "lucide-react";
 
-function getOrgId(session: Awaited<ReturnType<typeof getServerSession>>): string | null {
-  return (session?.user as { orgId?: string })?.orgId ?? null;
+function getOrgId(session: { user?: { orgId?: string } } | null): string | null {
+  return session?.user?.orgId ?? null;
 }
 
 export default async function PTOPage() {
