@@ -4,6 +4,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ——— Theme tokens ——— */
 :root {
   --nyx-bg: #03090f;
   --nyx-surface: #060f1e;
@@ -11,6 +12,21 @@
   --nyx-blue-bright: #4d8fff;
   --nyx-gold: #c9a44a;
   --nyx-violet: #6366f1;
+
+  /* Adaptive page tokens */
+  --page-bg: #060e1e;
+  --sidebar-from: rgba(10, 24, 50, 0.99);
+  --sidebar-to: rgba(6, 14, 30, 1);
+  --sidebar-border: rgba(37, 112, 245, 0.18);
+  --item-border: rgba(37, 112, 245, 0.14);
+}
+
+[data-theme="light"] {
+  --page-bg: #d5e1f7;
+  --sidebar-from: #0d1f40;
+  --sidebar-to: #07122a;
+  --sidebar-border: rgba(77, 143, 255, 0.30);
+  --item-border: rgba(77, 143, 255, 0.18);
 }
 
 * {
@@ -24,7 +40,7 @@ html {
 }
 
 body {
-  background-color: #060e1e;
+  background-color: var(--page-bg);
   color: #b8cce8;
   font-family: "Inter", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -37,7 +53,7 @@ body {
   width: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: #060e1e;
+  background: var(--page-bg);
 }
 ::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, #2570f5, #6366f1);

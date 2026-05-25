@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { WaitlistProvider } from "@/context/WaitlistContext";
 import WaitlistModal from "@/components/WaitlistModal";
+import ThemeProvider from "@/context/ThemeContext";
 
 export const metadata: Metadata = {
   title: "NyxEthos  -  Modular HR Software by NyxCollective",
@@ -42,11 +43,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className="bg-nyx-bg antialiased">
-        <WaitlistProvider>
-          {children}
-          <WaitlistModal />
-        </WaitlistProvider>
+      <body className="antialiased">
+        {/* Anti-flash: set theme+layout on html before React hydrates */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('nyx-theme')||'dark';var l=localStorage.getItem('nyx-layout')||'default';document.documentElement.setAttribute('data-theme',t);document.documentElement.setAttribute('data-layout',l);}catch(e){}})();` }} />
+        <ThemeProvider>
+          <WaitlistProvider>
+            {children}
+            <WaitlistModal />
+          </WaitlistProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

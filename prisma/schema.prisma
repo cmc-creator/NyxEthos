@@ -48,6 +48,10 @@ model Employee {
   documents          Document[]
   performanceReviews PerformanceReview[]
   payStubs           PayStub[]
+  managerId          String?
+  manager            Employee?           @relation("EmployeeReports", fields: [managerId], references: [id])
+  reports            Employee[]          @relation("EmployeeReports")
+  onboardingPlans    OnboardingPlan[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 }
@@ -122,6 +126,31 @@ model PayrollRun {
   payStubs      PayStub[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+}
+
+model OnboardingPlan {
+  id           String          @id @default(cuid())
+  orgId        String
+  employeeId   String
+  employee     Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  templateName String
+  status       String          @default("in_progress")
+  tasks        OnboardingTask[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+model OnboardingTask {
+  id          String         @id @default(cuid())
+  planId      String
+  plan        OnboardingPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  title       String
+  category    String         @default("general")
+  order       Int            @default(0)
+  completedAt DateTime?
+  dueDate     DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 }
 
 model PayStub {
