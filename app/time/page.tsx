@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import Link from "next/link";
 import { Clock, Users, Calendar, TrendingUp, Plus } from "lucide-react";
+import TimeActionButtons from "@/components/TimeActionButtons";
 
 function getOrgId(session: { user?: { orgId?: string } } | null): string | null {
   return session?.user?.orgId ?? null;
@@ -17,7 +18,7 @@ export default async function TimePage() {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-  const [recentEntries, weekHours, monthHours, employeeCount] = await Promise.all([
+  const [recentEntries, weekHours, monthHours, employeeCount, pendingCount] = await Promise.all([
     prisma.timeEntry.findMany({
       where: { orgId },
       include: { employee: { select: { firstName: true, lastName: true, jobTitle: true } } },
@@ -33,6 +34,7 @@ export default async function TimePage() {
       _sum: { hours: true },
     }),
     prisma.employee.count({ where: { orgId, status: "active" } }),
+    prisma.timeEntry.count({ where: { orgId, status: "pending" } }),
   ]);
 
   const weekTotal = weekHours._sum.hours ?? 0;
@@ -73,7 +75,7 @@ export default async function TimePage() {
           { icon: Clock, label: "This Week", value: `${weekTotal.toFixed(1)}h`, sub: "Total hours logged", color: "blue" as const },
           { icon: Calendar, label: "This Month", value: `${monthTotal.toFixed(1)}h`, sub: "Last 30 days", color: "green" as const },
           { icon: Users, label: "Active Employees", value: String(employeeCount), sub: "On the team", color: "purple" as const },
-          { icon: TrendingUp, label: "Total Entries", value: String(recentEntries.length > 19 ? "20+" : recentEntries.length), sub: "Recent records shown", color: "amber" as const },
+          { icon: TrendingUp, label: "Pending Approval", value: String(pendingCount), sub: "Time entries to review", color: "amber" as const },
         ].map(({ icon: Icon, label, value, sub, color }) => {
           const palettes = {
             blue: { backgroundColor: "rgba(37,112,245,0.15)", color: "#4d8fff", border: "rgba(37,112,245,0.25)" },
@@ -136,11 +138,12 @@ export default async function TimePage() {
               className="grid grid-cols-12 px-6 py-3 text-xs font-semibold uppercase tracking-widest border-b"
               style={{ color: "#7a9fc0", borderColor: "rgba(37,112,245,0.08)" }}
             >
-              <span className="col-span-4">Employee</span>
+              <span className="col-span-3">Employee</span>
               <span className="col-span-2">Date</span>
-              <span className="col-span-2">Hours</span>
+              <span className="col-span-1">Hours</span>
               <span className="col-span-2">Type</span>
-              <span className="col-span-2">Note</span>
+              <span className="col-span-2">Status</span>
+              <span className="col-span-2">Actions</span>
             </div>
             {recentEntries.map((entry) => (
               <div
@@ -148,7 +151,7 @@ export default async function TimePage() {
                 className="grid grid-cols-12 px-6 py-3.5 border-b last:border-0"
                 style={{ borderColor: "rgba(37,112,245,0.06)" }}
               >
-                <div className="col-span-4 flex items-center gap-2">
+                <div className="col-span-3 flex items-center gap-2">
                   <div
                     className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
                     style={{ background: "linear-gradient(135deg, #2570f5, #6366f1)" }}
@@ -164,7 +167,7 @@ export default async function TimePage() {
                     {new Date(entry.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                   </span>
                 </div>
-                <div className="col-span-2 flex items-center">
+                <div className="col-span-1 flex items-center">
                   <span className="text-sm font-semibold" style={{ color: "#eef5ff" }}>{entry.hours}h</span>
                 </div>
                 <div className="col-span-2 flex items-center">
@@ -176,7 +179,21 @@ export default async function TimePage() {
                   </span>
                 </div>
                 <div className="col-span-2 flex items-center">
-                  <span className="text-xs truncate" style={{ color: "#7a9fc0" }}>{entry.note || "—"}</span>
+                  {(() => {
+                    const sc = entry.status === "approved"
+                      ? { bg: "rgba(52,211,153,0.12)", text: "#34d399", label: "Approved" }
+                      : entry.status === "rejected"
+                      ? { bg: "rgba(239,68,68,0.12)", text: "#f87171", label: "Rejected" }
+                      : { bg: "rgba(251,191,36,0.12)", text: "#fbbf24", label: "Pending" };
+                    return (
+                      <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: sc.bg, color: sc.text }}>
+                        {sc.label}
+                      </span>
+                    );
+                  })()}
+                </div>
+                <div className="col-span-2 flex items-center">
+                  {entry.status === "pending" && <TimeActionButtons entryId={entry.id} />}
                 </div>
               </div>
             ))}

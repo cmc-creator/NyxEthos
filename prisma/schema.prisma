@@ -47,6 +47,7 @@ model Employee {
   leaveRequests      LeaveRequest[]
   documents          Document[]
   performanceReviews PerformanceReview[]
+  payStubs           PayStub[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 }
@@ -59,6 +60,7 @@ model TimeEntry {
   date       DateTime
   hours      Float
   type       String   @default("regular")
+  status     String   @default("pending")
   note       String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -104,4 +106,36 @@ model PerformanceReview {
   reviewDate DateTime
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+}
+
+model PayrollRun {
+  id            String    @id @default(cuid())
+  orgId         String
+  period        String
+  startDate     DateTime
+  endDate       DateTime
+  status        String    @default("processed")
+  totalGross    Float     @default(0)
+  totalNet      Float     @default(0)
+  employeeCount Int       @default(0)
+  notes         String?
+  payStubs      PayStub[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model PayStub {
+  id             String     @id @default(cuid())
+  payrollRunId   String
+  payrollRun     PayrollRun @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
+  employeeId     String
+  employee       Employee   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  orgId          String
+  grossPay       Float
+  federalTax     Float      @default(0)
+  stateTax       Float      @default(0)
+  socialSecurity Float      @default(0)
+  medicare       Float      @default(0)
+  netPay         Float
+  createdAt      DateTime   @default(now())
 }

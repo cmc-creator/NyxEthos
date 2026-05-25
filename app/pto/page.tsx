@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import Link from "next/link";
 import { CalendarDays, Clock, CheckCircle, XCircle, Plus } from "lucide-react";
+import PtoActionButtons from "@/components/PtoActionButtons";
 
 function getOrgId(session: { user?: { orgId?: string } } | null): string | null {
   return session?.user?.orgId ?? null;
@@ -14,12 +15,33 @@ export default async function PTOPage() {
   const orgId = getOrgId(session);
   if (!orgId) redirect("/sign-in");
 
-  const requests = await prisma.leaveRequest.findMany({
-    where: { orgId },
-    include: { employee: { select: { firstName: true, lastName: true, jobTitle: true } } },
-    orderBy: { createdAt: "desc" },
-    take: 50,
-  });
+  const startOfYear = new Date(new Date().getFullYear(), 0, 1);
+
+  const [requests, employees] = await Promise.all([
+    prisma.leaveRequest.findMany({
+      where: { orgId },
+      include: { employee: { select: { firstName: true, lastName: true, jobTitle: true } } },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    }),
+    prisma.employee.findMany({
+      where: { orgId, status: "active" },
+      select: { id: true, firstName: true, lastName: true },
+      orderBy: { firstName: "asc" },
+      take: 10,
+    }),
+  ]);
+
+  // PTO balance calculation
+  const ALLOTMENTS: Record<string, number> = { vacation: 15, sick: 10, personal: 3 };
+  const approvedThisYear = requests.filter(
+    (r) => r.status === "approved" && new Date(r.startDate) >= startOfYear
+  );
+  const balanceMap: Record<string, Record<string, number>> = {};
+  for (const r of approvedThisYear) {
+    if (!balanceMap[r.employeeId]) balanceMap[r.employeeId] = {};
+    balanceMap[r.employeeId][r.type] = (balanceMap[r.employeeId][r.type] ?? 0) + r.days;
+  }
 
   const pending = requests.filter((r) => r.status === "pending").length;
   const approved = requests.filter((r) => r.status === "approved").length;
@@ -94,6 +116,52 @@ export default async function PTOPage() {
         })}
       </div>
 
+      {/* PTO Balances */}
+      {employees.length > 0 && (
+        <div className="glass-card rounded-2xl overflow-hidden mb-6">
+          <div className="px-6 py-5 border-b" style={{ borderColor: "rgba(37,112,245,0.12)" }}>
+            <h2 className="text-base font-semibold font-heading" style={{ color: "#eef5ff" }}>PTO Balances (YTD)</h2>
+            <p className="text-xs mt-0.5" style={{ color: "#7a9fc0" }}>Vacation · 15d &nbsp;|&nbsp; Sick · 10d &nbsp;|&nbsp; Personal · 3d</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 divide-y md:divide-y-0 md:divide-x" style={{ borderColor: "rgba(37,112,245,0.08)", color: "rgba(37,112,245,0.08)" }}>
+            {employees.slice(0, 6).map((emp) => {
+              const used = balanceMap[emp.id] ?? {};
+              return (
+                <div key={emp.id} className="px-6 py-4" style={{ borderColor: "rgba(37,112,245,0.08)" }}>
+                  <p className="text-sm font-semibold mb-3" style={{ color: "#eef5ff" }}>{emp.firstName} {emp.lastName}</p>
+                  <div className="space-y-2">
+                    {Object.entries(ALLOTMENTS).map(([type, total]) => {
+                      const usedDays = used[type] ?? 0;
+                      const remaining = Math.max(0, total - usedDays);
+                      const pct = Math.min(100, Math.round((usedDays / total) * 100));
+                      return (
+                        <div key={type}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs capitalize" style={{ color: "#7a9fc0" }}>{type}</span>
+                            <span className="text-xs font-semibold" style={{ color: remaining <= 2 ? "#f87171" : "#eef5ff" }}>
+                              {remaining}d left
+                            </span>
+                          </div>
+                          <div className="h-1 rounded-full overflow-hidden" style={{ background: "rgba(37,112,245,0.1)" }}>
+                            <div
+                              className="h-full rounded-full"
+                              style={{
+                                width: `${pct}%`,
+                                background: pct >= 80 ? "#f87171" : pct >= 50 ? "#fbbf24" : "#4d8fff",
+                              }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Leave requests table */}
       <div className="glass-card rounded-2xl overflow-hidden">
         <div className="flex items-center justify-between px-6 py-5 border-b" style={{ borderColor: "rgba(37,112,245,0.12)" }}>
@@ -131,11 +199,12 @@ export default async function PTOPage() {
               className="grid grid-cols-12 px-6 py-3 text-xs font-semibold uppercase tracking-widest border-b"
               style={{ color: "#7a9fc0", borderColor: "rgba(37,112,245,0.08)" }}
             >
-              <span className="col-span-4">Employee</span>
+              <span className="col-span-3">Employee</span>
               <span className="col-span-2">Type</span>
-              <span className="col-span-3">Dates</span>
+              <span className="col-span-2">Dates</span>
               <span className="col-span-1">Days</span>
               <span className="col-span-2">Status</span>
+              <span className="col-span-2">Actions</span>
             </div>
             {requests.map((req) => {
               const sc = statusConfig[req.status] ?? statusConfig.pending;
@@ -145,7 +214,7 @@ export default async function PTOPage() {
                   className="grid grid-cols-12 px-6 py-3.5 border-b last:border-0"
                   style={{ borderColor: "rgba(37,112,245,0.06)" }}
                 >
-                  <div className="col-span-4 flex items-center gap-2">
+                  <div className="col-span-3 flex items-center gap-2">
                     <div
                       className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
                       style={{ background: "linear-gradient(135deg, #2570f5, #6366f1)" }}
@@ -161,7 +230,7 @@ export default async function PTOPage() {
                       {typeLabels[req.type] ?? req.type}
                     </span>
                   </div>
-                  <div className="col-span-3 flex items-center">
+                  <div className="col-span-2 flex items-center">
                     <span className="text-xs" style={{ color: "#7a9fc0" }}>
                       {new Date(req.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                       {" — "}
@@ -178,6 +247,9 @@ export default async function PTOPage() {
                     >
                       {sc.label}
                     </span>
+                  </div>
+                  <div className="col-span-2 flex items-center">
+                    {req.status === "pending" && <PtoActionButtons requestId={req.id} />}
                   </div>
                 </div>
               );

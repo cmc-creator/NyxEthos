@@ -15,6 +15,7 @@ import {
   FolderOpen,
   LogOut,
   ChevronRight,
+  BarChart2,
 } from "lucide-react";
 import Logo from "@/components/Logo";
 
@@ -23,6 +24,7 @@ const navSections = [
     heading: "Platform",
     items: [
       { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+      { label: "Analytics", href: "/analytics", icon: BarChart2 },
       { label: "Employees", href: "/employees", icon: Users },
     ],
   },

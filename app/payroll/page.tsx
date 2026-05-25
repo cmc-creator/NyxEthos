@@ -3,7 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import Link from "next/link";
-import { DollarSign, Users, TrendingUp, Building2, ArrowRight } from "lucide-react";
+import { DollarSign, Users, TrendingUp, Building2, ArrowRight, Play, CheckCircle, Clock } from "lucide-react";
 
 function getOrgId(session: { user?: { orgId?: string } } | null): string | null {
   return session?.user?.orgId ?? null;
@@ -22,19 +22,26 @@ export default async function PayrollPage() {
   const orgId = getOrgId(session);
   if (!orgId) redirect("/sign-in");
 
-  const employees = await prisma.employee.findMany({
-    where: { orgId, status: "active" },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      jobTitle: true,
-      department: true,
-      employmentType: true,
-      salary: true,
-    },
-    orderBy: { firstName: "asc" },
-  });
+  const [employees, payrollRuns] = await Promise.all([
+    prisma.employee.findMany({
+      where: { orgId, status: "active" },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        jobTitle: true,
+        department: true,
+        employmentType: true,
+        salary: true,
+      },
+      orderBy: { firstName: "asc" },
+    }),
+    prisma.payrollRun.findMany({
+      where: { orgId },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+    }),
+  ]);
 
   const withSalary = employees.filter((e) => e.salary !== null && e.salary !== undefined);
   const totalAnnual = withSalary.reduce((sum, e) => sum + (e.salary ?? 0), 0);
@@ -64,12 +71,12 @@ export default async function PayrollPage() {
           </p>
         </div>
         <Link
-          href="/employees/new"
+          href="/payroll/run"
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90"
           style={{ background: "linear-gradient(135deg, #2570f5, #6366f1)" }}
         >
-          <Users size={14} />
-          Add Employee
+          <Play size={14} />
+          Run Payroll
         </Link>
       </div>
 
@@ -131,6 +138,59 @@ export default async function PayrollPage() {
           );
         })}
       </div>
+
+      {/* Payroll Runs */}
+      {payrollRuns.length > 0 && (
+        <div className="glass-card rounded-2xl overflow-hidden mb-6">
+          <div className="px-6 py-5 border-b" style={{ borderColor: "rgba(37,112,245,0.12)" }}>
+            <h2 className="text-base font-semibold font-heading" style={{ color: "#eef5ff" }}>Recent Payroll Runs</h2>
+          </div>
+          <div>
+            <div
+              className="grid grid-cols-12 px-6 py-3 text-xs font-semibold uppercase tracking-widest border-b"
+              style={{ color: "#7a9fc0", borderColor: "rgba(37,112,245,0.08)" }}
+            >
+              <span className="col-span-3">Period</span>
+              <span className="col-span-2">Employees</span>
+              <span className="col-span-3">Gross</span>
+              <span className="col-span-2">Net</span>
+              <span className="col-span-2">Status</span>
+            </div>
+            {payrollRuns.map((run) => {
+              const sc = run.status === "completed"
+                ? { bg: "rgba(52,211,153,0.12)", text: "#34d399", label: "Completed", Icon: CheckCircle }
+                : run.status === "draft"
+                ? { bg: "rgba(251,191,36,0.12)", text: "#fbbf24", label: "Draft", Icon: Clock }
+                : { bg: "rgba(37,112,245,0.12)", text: "#4d8fff", label: run.status, Icon: Clock };
+              return (
+                <div
+                  key={run.id}
+                  className="grid grid-cols-12 px-6 py-3.5 border-b last:border-0"
+                  style={{ borderColor: "rgba(37,112,245,0.06)" }}
+                >
+                  <div className="col-span-3 flex items-center">
+                    <span className="text-sm font-medium" style={{ color: "#eef5ff" }}>{run.period}</span>
+                  </div>
+                  <div className="col-span-2 flex items-center">
+                    <span className="text-sm" style={{ color: "#b8cce8" }}>{run.employeeCount}</span>
+                  </div>
+                  <div className="col-span-3 flex items-center">
+                    <span className="text-sm font-semibold" style={{ color: "#eef5ff" }}>{fmtUSD(run.totalGross)}</span>
+                  </div>
+                  <div className="col-span-2 flex items-center">
+                    <span className="text-sm" style={{ color: "#b8cce8" }}>{fmtUSD(run.totalNet)}</span>
+                  </div>
+                  <div className="col-span-2 flex items-center">
+                    <span className="text-xs px-2.5 py-0.5 rounded-full font-medium" style={{ background: sc.bg, color: sc.text }}>
+                      {sc.label}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Employee salary table */}
