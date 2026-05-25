@@ -2,7 +2,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { BarChart2, Users, TrendingUp, DollarSign, Calendar, Activity, Zap } from "lucide-react";
+import { Users, TrendingUp, DollarSign, Calendar, Activity, Zap } from "lucide-react";
+import AnalyticsCharts from "./AnalyticsCharts";
 
 function getOrgId(session: { user?: { orgId?: string } } | null): string | null {
   return session?.user?.orgId ?? null;
@@ -51,7 +52,6 @@ export default async function AnalyticsPage() {
     deptMap[d] = (deptMap[d] ?? 0) + 1;
   }
   const depts = Object.entries(deptMap).sort((a, b) => b[1] - a[1]);
-  const maxDeptCount = Math.max(1, ...depts.map((d) => d[1]));
 
   // Employment type breakdown
   const typeMap: Record<string, number> = {};
@@ -72,7 +72,6 @@ export default async function AnalyticsPage() {
     }).length;
     months.push({ label: start.toLocaleDateString("en-US", { month: "short" }), count });
   }
-  const maxHires = Math.max(1, ...months.map((m) => m.count));
 
   // PTO by type
   const ptoByType: Record<string, number> = {};
@@ -151,77 +150,13 @@ export default async function AnalyticsPage() {
         })}
       </div>
 
-      {/* Charts Row 1 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* New Hires Bar Chart */}
-        <div className="glass-card rounded-2xl p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <BarChart2 size={14} style={{ color: "#4d8fff" }} />
-            <h3 className="text-sm font-semibold" style={{ color: "#eef5ff" }}>New Hires — Last 6 Months</h3>
-            <span className="ml-auto text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(52,211,153,0.12)", color: "#34d399" }}>
-              {newThisYear.length} YTD
-            </span>
-          </div>
-          <div className="flex items-end justify-between gap-2 h-32">
-            {months.map(({ label, count }) => (
-              <div key={label} className="flex-1 flex flex-col items-center gap-1.5">
-                <span className="text-xs font-bold h-4" style={{ color: "#eef5ff" }}>
-                  {count > 0 ? count : ""}
-                </span>
-                <div
-                  className="w-full rounded-t-lg"
-                  style={{
-                    height: `${Math.max(4, (count / maxHires) * 96)}px`,
-                    background: count > 0 ? "linear-gradient(180deg, #6fa8ff 0%, #2570f5 100%)" : "rgba(37,112,245,0.07)",
-                    border: "1px solid rgba(37,112,245,0.18)",
-                    transition: "height 0.3s ease",
-                  }}
-                />
-                <span className="text-xs" style={{ color: "#7a9fc0" }}>{label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Department Headcount */}
-        <div className="glass-card rounded-2xl p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <Users size={14} style={{ color: "#818cf8" }} />
-            <h3 className="text-sm font-semibold" style={{ color: "#eef5ff" }}>Headcount by Department</h3>
-            <span className="ml-auto text-xs" style={{ color: "#7a9fc0" }}>{depts.length} depts</span>
-          </div>
-          {depts.length === 0 ? (
-            <p className="text-sm py-10 text-center" style={{ color: "#7a9fc0" }}>
-              Add department info to employees to see this chart.
-            </p>
-          ) : (
-            <div className="space-y-3.5">
-              {depts.map(([dept, count]) => (
-                <div key={dept}>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs font-medium truncate max-w-[160px]" style={{ color: "#b8cce8" }}>{dept}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold" style={{ color: "#eef5ff" }}>{count}</span>
-                      <span className="text-xs" style={{ color: "#7a9fc0" }}>
-                        {active.length > 0 ? `${((count / active.length) * 100).toFixed(0)}%` : ""}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(37,112,245,0.08)" }}>
-                    <div
-                      className="h-full rounded-full"
-                      style={{
-                        width: `${(count / maxDeptCount) * 100}%`,
-                        background: "linear-gradient(90deg, #4d8fff, #818cf8)",
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Charts Row 1 — recharts */}
+      <AnalyticsCharts
+        months={months}
+        depts={depts}
+        activeCount={active.length}
+        payrollRuns={payrollRuns.map((r) => ({ period: r.period, gross: r.totalGross, net: r.totalNet }))}
+      />
 
       {/* Charts Row 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">

@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import type { Session } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
-function getOrgId(session: Session | null): string | null {
-  return (session?.user as { orgId?: string } | undefined)?.orgId ?? null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getOrgId(session: any): string | null {
+  return session?.user?.orgId ?? null;
 }
 
 export async function GET() {
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { firstName, lastName, email, phone, department, jobTitle, startDate, status, employmentType, salary } = body;
+    const { firstName, lastName, email, phone, department, jobTitle, startDate, status, employmentType, salary, managerId } = body;
 
     if (!firstName || !lastName || !email) {
       return NextResponse.json({ error: "First name, last name, and email are required." }, { status: 400 });
@@ -45,6 +45,7 @@ export async function POST(req: Request) {
         status: status || "active",
         employmentType: employmentType || "full-time",
         salary: salary ? parseFloat(String(salary)) : null,
+        managerId: managerId || null,
         orgId,
       },
     });

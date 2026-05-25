@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useTheme } from "@/context/ThemeContext";
+import NotificationBell from "@/components/NotificationBell";
 
 const navSections = [
   {
@@ -111,13 +112,21 @@ export default function AppSidebar({ userName }: { userName?: string | null }) {
             </div>
           </Link>
         ) : (
-          <Link href="/">
-            <Logo size="sm" />
-          </Link>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+            <Link href="/">
+              <Logo size="sm" />
+            </Link>
+            <NotificationBell />
+          </div>
         )}
       </div>
 
       {/* Nav */}
+      {compact && (
+        <div style={{ padding: "8px 6px 0", display: "flex", justifyContent: "center" }}>
+          <NotificationBell />
+        </div>
+      )}
       <nav
         style={{
           flex: 1,

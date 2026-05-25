@@ -10,7 +10,7 @@ const DEPARTMENTS = ["Engineering", "Sales", "Marketing", "Operations", "HR", "F
 type FormData = {
   firstName: string; lastName: string; email: string; phone: string;
   jobTitle: string; startDate: string; department: string;
-  status: string; employmentType: string; salary: string;
+  status: string; employmentType: string; salary: string; managerId: string;
 };
 
 export default function EmployeeDetailPage() {
@@ -24,6 +24,14 @@ export default function EmployeeDetailPage() {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
+  const [managers, setManagers] = useState<{ id: string; firstName: string; lastName: string }[]>([]);
+
+  useEffect(() => {
+    fetch("/api/employees")
+      .then((r) => r.json())
+      .then((data) => Array.isArray(data) && setManagers(data))
+      .catch(() => null);
+  }, []);
 
   useEffect(() => {
     fetch(`/api/employees/${id}`)
@@ -40,6 +48,7 @@ export default function EmployeeDetailPage() {
           status: data.status ?? "ACTIVE",
           employmentType: data.employmentType ?? "FULL_TIME",
           salary: data.salary != null ? String(data.salary) : "",
+          managerId: data.managerId ?? "",
         });
         setLoading(false);
       })
@@ -198,6 +207,25 @@ export default function EmployeeDetailPage() {
           <input type="number" min="0" step="1000" placeholder="e.g. 75000"
             value={form.salary} onChange={(e) => set("salary", e.target.value)}
             className={inputClass} style={inputStyle} />
+        </div>
+
+        <div>
+          <label className={labelClass}>Manager</label>
+          <select
+            value={form.managerId}
+            onChange={(e) => set("managerId", e.target.value)}
+            className={inputClass}
+            style={inputStyle}
+          >
+            <option value="">— No manager —</option>
+            {managers
+              .filter((m) => m.id !== id)
+              .map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.firstName} {m.lastName}
+                </option>
+              ))}
+          </select>
         </div>
 
         <div className="flex items-center justify-end gap-3 pt-2">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save } from "lucide-react";
@@ -19,13 +19,13 @@ const FIELDS = [
 type FormData = {
   firstName: string; lastName: string; email: string; phone: string;
   jobTitle: string; startDate: string; department: string;
-  status: string; employmentType: string; salary: string;
+  status: string; employmentType: string; salary: string; managerId: string;
 };
 
 const init: FormData = {
   firstName: "", lastName: "", email: "", phone: "",
   jobTitle: "", startDate: "", department: "",
-  status: "ACTIVE", employmentType: "FULL_TIME", salary: "",
+  status: "ACTIVE", employmentType: "FULL_TIME", salary: "", managerId: "",
 };
 
 export default function NewEmployeePage() {
@@ -33,6 +33,14 @@ export default function NewEmployeePage() {
   const [form, setForm] = useState<FormData>(init);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [managers, setManagers] = useState<{ id: string; firstName: string; lastName: string }[]>([]);
+
+  useEffect(() => {
+    fetch("/api/employees")
+      .then((r) => r.json())
+      .then((data) => Array.isArray(data) && setManagers(data))
+      .catch(() => null);
+  }, []);
 
   function set(field: keyof FormData, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -143,6 +151,24 @@ export default function NewEmployeePage() {
               <option value="TERMINATED">Terminated</option>
             </select>
           </div>
+        </div>
+
+        {/* Manager */}
+        <div>
+          <label className={labelClass}>Manager</label>
+          <select
+            value={form.managerId}
+            onChange={(e) => set("managerId", e.target.value)}
+            className={inputClass}
+            style={inputStyle}
+          >
+            <option value="">— No manager —</option>
+            {managers.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.firstName} {m.lastName}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Salary */}

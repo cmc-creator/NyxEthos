@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import type { Session } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
-function getOrgId(session: Session | null): string | null {
-  return (session?.user as { orgId?: string } | undefined)?.orgId ?? null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getOrgId(session: any): string | null {
+  return session?.user?.orgId ?? null;
 }
 
 export async function GET(
@@ -48,6 +48,7 @@ export async function PUT(
         status: body.status ?? existing.status,
         employmentType: body.employmentType ?? existing.employmentType,
         salary: body.salary !== undefined ? (body.salary ? parseFloat(String(body.salary)) : null) : existing.salary,
+        managerId: body.managerId !== undefined ? body.managerId || null : existing.managerId,
       },
     });
     return NextResponse.json(employee);
