@@ -1,131 +1,202 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { redirect } from "next/navigation";
-import { prisma } from "@/lib/db";
-import Link from "next/link";
-import { FileText, Users, CheckCircle, AlertCircle, FolderOpen } from "lucide-react";
+﻿"use client";
 
-function getOrgId(session: { user?: { orgId?: string } } | null): string | null {
-  return session?.user?.orgId ?? null;
-}
+import { useEffect, useState } from "react";
+import { CheckCircle, Circle, Plus, Loader2, ClipboardList, ShieldCheck, Scale, Flame, Lock, BarChart2, DollarSign, Heart } from "lucide-react";
 
-const complianceItems = [
-  { id: 1, title: "Employee Handbook", desc: "Distribute updated handbook to all employees", category: "Policy" },
-  { id: 2, title: "Anti-Harassment Training", desc: "Annual training completion required", category: "Training" },
-  { id: 3, title: "I-9 Verification", desc: "Employment eligibility verification on file", category: "Legal" },
-  { id: 4, title: "Safety & OSHA", desc: "Workplace safety compliance review", category: "Safety" },
-  { id: 5, title: "Data Privacy (CCPA/GDPR)", desc: "Employee data handling policies", category: "Privacy" },
-  { id: 6, title: "Equal Opportunity Policy", desc: "EEO policy posted and distributed", category: "Legal" },
-  { id: 7, title: "Payroll Tax Compliance", desc: "Tax withholding and filings up to date", category: "Finance" },
-  { id: 8, title: "Benefits Enrollment Records", desc: "Annual enrollment documentation on file", category: "Benefits" },
-];
+type Task = { id: string; title: string; description: string | null; category: string; status: string; dueDate: string | null; completedAt: string | null };
 
-export default async function CompliancePage() {
-  const session = await getServerSession(authOptions);
-  const orgId = getOrgId(session);
-  if (!orgId) redirect("/sign-in");
+const CAT_META: Record<string, { icon: typeof ClipboardList; color: string; bg: string }> = {
+  policy:   { icon: ClipboardList, color: "#4d8fff", bg: "rgba(37,112,245,0.15)" },
+  training: { icon: ShieldCheck,   color: "#34d399", bg: "rgba(52,211,153,0.12)" },
+  legal:    { icon: Scale,         color: "#818cf8", bg: "rgba(99,102,241,0.15)" },
+  safety:   { icon: Flame,         color: "#f87171", bg: "rgba(239,68,68,0.12)" },
+  finance:  { icon: DollarSign,    color: "#fbbf24", bg: "rgba(251,191,36,0.12)" },
+  benefits: { icon: Heart,         color: "#f472b6", bg: "rgba(244,114,182,0.12)" },
+  other:    { icon: Lock,          color: "#94a3b8", bg: "rgba(148,163,184,0.12)" },
+};
 
-  const [employeeCount, documentCount] = await Promise.all([
-    prisma.employee.count({ where: { orgId } }),
-    prisma.document.count({ where: { orgId } }),
-  ]);
+export default function CompliancePage() {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [toggling, setToggling] = useState<string | null>(null);
+  const [showAdd, setShowAdd] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [form, setForm] = useState({ title: "", description: "", category: "policy", dueDate: "" });
+  const [toast, setToast] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"all" | "pending" | "completed">("all");
+
+  function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(null), 3000); }
+
+  async function load() {
+    const r = await fetch("/api/compliance");
+    const d = await r.json();
+    setTasks(Array.isArray(d) ? d : []);
+    setLoading(false);
+  }
+
+  useEffect(() => { load(); }, []);
+
+  async function toggle(task: Task) {
+    setToggling(task.id);
+    const newStatus = task.status === "completed" ? "pending" : "completed";
+    const r = await fetch("/api/compliance", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: task.id, status: newStatus }),
+    });
+    if (r.ok) {
+      setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: newStatus, completedAt: newStatus === "completed" ? new Date().toISOString() : null } : t));
+      showToast(newStatus === "completed" ? "Marked complete!" : "Marked pending");
+    }
+    setToggling(null);
+  }
+
+  async function addTask(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.title) return;
+    setAdding(true);
+    const r = await fetch("/api/compliance", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+    if (r.ok) {
+      await load();
+      setForm({ title: "", description: "", category: "policy", dueDate: "" });
+      setShowAdd(false);
+      showToast("Task added!");
+    }
+    setAdding(false);
+  }
+
+  const filtered = tasks.filter(t => filter === "all" || t.status === filter);
+  const completed = tasks.filter(t => t.status === "completed").length;
+  const pending = tasks.filter(t => t.status === "pending").length;
+  const pct = tasks.length > 0 ? Math.round((completed / tasks.length) * 100) : 0;
+  const glass = { background: "rgba(10,24,50,0.7)", border: "1px solid rgba(37,112,245,0.18)" };
+  const inputStyle = { borderColor: "rgba(37,112,245,0.25)", background: "rgba(10,24,50,0.6)", color: "#eef5ff" };
+
+  if (loading) return <div className="p-8 flex items-center justify-center min-h-[40vh]"><Loader2 size={22} className="animate-spin text-nyx-blue" /></div>;
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
+    <div className="p-8 max-w-5xl mx-auto">
+      {toast && (
+        <div className="fixed top-4 right-4 z-50 px-5 py-3 rounded-xl text-sm font-semibold shadow-xl" style={{ background: "rgba(52,211,153,0.9)", color: "#0a1832" }}>
+          {toast}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold font-heading" style={{ color: "#eef5ff" }}>
-            Compliance
-          </h1>
-          <p className="mt-1 text-sm" style={{ color: "#7a9fc0" }}>
-            Policies, audits, and regulatory requirements.
-          </p>
+          <h1 className="text-2xl font-bold font-heading" style={{ color: "#eef5ff" }}>Compliance</h1>
+          <p className="mt-1 text-sm" style={{ color: "#7a9fc0" }}>Track compliance tasks and regulatory requirements.</p>
         </div>
-        <Link
-          href="/documents"
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
-          style={{
-            background: "rgba(37,112,245,0.1)",
-            border: "1px solid rgba(37,112,245,0.22)",
-            color: "#4d8fff",
-          }}
-        >
-          <FolderOpen size={14} />
-          View Documents
-        </Link>
+        <button onClick={() => setShowAdd(v => !v)}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+          style={{ background: "rgba(37,112,245,0.2)", color: "#4d8fff", border: "1px solid rgba(37,112,245,0.35)" }}>
+          <Plus size={15} /> Add Task
+        </button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-        {[
-          { icon: FileText, label: "Checklist Items", value: String(complianceItems.length), sub: "Review annually", color: "blue" as const },
-          { icon: Users, label: "Employees", value: String(employeeCount), sub: "On record", color: "green" as const },
-          { icon: FolderOpen, label: "Documents", value: String(documentCount), sub: "Filed in system", color: "purple" as const },
-          { icon: CheckCircle, label: "Categories", value: "4", sub: "Policy, Legal, Training, Safety", color: "amber" as const },
-        ].map(({ icon: Icon, label, value, sub, color }) => {
-          const palettes = {
-            blue: { bg: "rgba(37,112,245,0.15)", text: "#4d8fff", border: "rgba(37,112,245,0.25)" },
-            green: { bg: "rgba(52,211,153,0.12)", text: "#34d399", border: "rgba(52,211,153,0.25)" },
-            purple: { bg: "rgba(99,102,241,0.18)", text: "#818cf8", border: "rgba(99,102,241,0.25)" },
-            amber: { bg: "rgba(251,191,36,0.12)", text: "#fbbf24", border: "rgba(251,191,36,0.25)" },
-          };
-          const c = palettes[color];
+      {/* Progress Card */}
+      <div className="rounded-2xl p-6 mb-6 grid grid-cols-3 gap-6" style={glass}>
+        <div className="col-span-2">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm font-semibold" style={{ color: "#eef5ff" }}>Overall Compliance</span>
+            <span className="text-xl font-bold" style={{ color: pct >= 80 ? "#34d399" : pct >= 50 ? "#fbbf24" : "#f87171" }}>{pct}%</span>
+          </div>
+          <div className="h-2.5 rounded-full" style={{ background: "rgba(255,255,255,0.08)" }}>
+            <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: pct >= 80 ? "#34d399" : pct >= 50 ? "#fbbf24" : "#f87171" }} />
+          </div>
+          <p className="text-xs mt-2" style={{ color: "#7a9fc0" }}>{completed} of {tasks.length} tasks completed</p>
+        </div>
+        <div className="flex flex-col gap-2">
+          <div className="flex justify-between text-xs"><span className="text-nyx-muted">Completed</span><span className="font-semibold" style={{ color: "#34d399" }}>{completed}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-nyx-muted">Pending</span><span className="font-semibold" style={{ color: "#fbbf24" }}>{pending}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-nyx-muted">Total</span><span className="font-semibold text-nyx-white">{tasks.length}</span></div>
+        </div>
+      </div>
+
+      {/* Add Task Form */}
+      {showAdd && (
+        <form onSubmit={addTask} className="rounded-2xl p-5 mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4" style={glass}>
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-semibold text-nyx-muted uppercase tracking-wider mb-1.5">Title *</label>
+            <input required className="w-full px-4 py-2.5 rounded-xl border text-sm outline-none focus:border-nyx-blue transition-colors"
+              style={inputStyle} value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="Task title…" />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-semibold text-nyx-muted uppercase tracking-wider mb-1.5">Description</label>
+            <input className="w-full px-4 py-2.5 rounded-xl border text-sm outline-none focus:border-nyx-blue transition-colors"
+              style={inputStyle} value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Optional description…" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-nyx-muted uppercase tracking-wider mb-1.5">Category</label>
+            <select className="w-full px-4 py-2.5 rounded-xl border text-sm outline-none" style={inputStyle} value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))}>
+              {Object.keys(CAT_META).map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-nyx-muted uppercase tracking-wider mb-1.5">Due Date</label>
+            <input type="date" className="w-full px-4 py-2.5 rounded-xl border text-sm outline-none" style={inputStyle} value={form.dueDate} onChange={e => setForm(p => ({ ...p, dueDate: e.target.value }))} />
+          </div>
+          <div className="sm:col-span-2 flex gap-3">
+            <button type="submit" disabled={adding}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-60 transition-opacity"
+              style={{ background: "rgba(37,112,245,0.9)", color: "#fff" }}>
+              {adding ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Add Task
+            </button>
+            <button type="button" onClick={() => setShowAdd(false)}
+              className="px-4 py-2.5 rounded-xl text-sm font-semibold" style={{ color: "#7a9fc0" }}>Cancel</button>
+          </div>
+        </form>
+      )}
+
+      {/* Filter */}
+      <div className="flex gap-2 mb-5">
+        {(["all","pending","completed"] as const).map(f => (
+          <button key={f} onClick={() => setFilter(f)}
+            className="px-4 py-2 rounded-xl text-xs font-semibold capitalize transition-all"
+            style={filter === f ? { background: "rgba(37,112,245,0.25)", color: "#eef5ff", border: "1px solid rgba(37,112,245,0.4)" } : { color: "#7a9fc0", border: "1px solid transparent" }}>
+            {f} {f === "all" ? `(${tasks.length})` : f === "pending" ? `(${pending})` : `(${completed})`}
+          </button>
+        ))}
+      </div>
+
+      {/* Task List */}
+      <div className="space-y-3">
+        {filtered.map(task => {
+          const meta = CAT_META[task.category] ?? CAT_META.other;
+          const Icon = meta.icon;
+          const done = task.status === "completed";
+          const busy = toggling === task.id;
           return (
-            <div key={label} className="glass-card rounded-2xl p-5">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#7a9fc0" }}>{label}</span>
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: c.bg, border: `1px solid ${c.border}` }}>
-                  <Icon size={15} style={{ color: c.text }} />
+            <div key={task.id} className="rounded-xl p-4 flex items-center gap-4 transition-all" style={{ ...glass, opacity: done ? 0.75 : 1 }}>
+              <button onClick={() => toggle(task)} disabled={busy} className="flex-shrink-0 transition-transform hover:scale-110">
+                {busy ? <Loader2 size={20} className="animate-spin text-nyx-blue" /> :
+                  done ? <CheckCircle size={20} style={{ color: "#34d399" }} /> :
+                  <Circle size={20} style={{ color: "#7a9fc0" }} />}
+              </button>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: meta.bg }}>
+                <Icon size={14} style={{ color: meta.color }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold" style={{ color: done ? "#7a9fc0" : "#eef5ff", textDecoration: done ? "line-through" : "none" }}>{task.title}</p>
+                {task.description && <p className="text-xs mt-0.5" style={{ color: "#7a9fc0" }}>{task.description}</p>}
+                <div className="flex items-center gap-3 mt-1">
+                  <span className="text-xs capitalize px-2 py-0.5 rounded-full" style={{ background: meta.bg, color: meta.color }}>{task.category}</span>
+                  {task.dueDate && <span className="text-xs" style={{ color: "#7a9fc0" }}>Due {new Date(task.dueDate).toLocaleDateString()}</span>}
+                  {task.completedAt && <span className="text-xs" style={{ color: "#34d399" }}>Completed {new Date(task.completedAt).toLocaleDateString()}</span>}
                 </div>
               </div>
-              <p className="text-2xl font-bold font-heading" style={{ color: "#eef5ff" }}>{value}</p>
-              {sub && <p className="text-xs mt-1" style={{ color: "#7a9fc0" }}>{sub}</p>}
+              <span className="text-xs px-2.5 py-1 rounded-full font-semibold flex-shrink-0 capitalize"
+                style={done ? { background: "rgba(52,211,153,0.12)", color: "#34d399" } : { background: "rgba(251,191,36,0.1)", color: "#fbbf24" }}>
+                {task.status}
+              </span>
             </div>
           );
         })}
-      </div>
-
-      {/* Compliance checklist */}
-      <div className="glass-card rounded-2xl overflow-hidden">
-        <div className="px-6 py-5 border-b" style={{ borderColor: "rgba(37,112,245,0.12)" }}>
-          <h2 className="text-base font-semibold font-heading" style={{ color: "#eef5ff" }}>
-            HR Compliance Checklist
-          </h2>
-          <p className="text-xs mt-1" style={{ color: "#7a9fc0" }}>
-            Standard compliance items for your organization. Upload related documents to{" "}
-            <Link href="/documents" style={{ color: "#4d8fff" }}>Documents</Link>.
-          </p>
-        </div>
-        <div>
-          {complianceItems.map((item, i) => (
-            <div
-              key={item.id}
-              className="flex items-center gap-4 px-6 py-4 border-b last:border-0"
-              style={{ borderColor: "rgba(37,112,245,0.06)" }}
-            >
-              <div
-                className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: i % 3 === 0 ? "rgba(52,211,153,0.12)" : "rgba(37,112,245,0.1)" }}
-              >
-                {i % 3 === 0
-                  ? <CheckCircle size={15} style={{ color: "#34d399" }} />
-                  : <AlertCircle size={15} style={{ color: "#4d8fff" }} />
-                }
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium" style={{ color: "#eef5ff" }}>{item.title}</p>
-                <p className="text-xs" style={{ color: "#7a9fc0" }}>{item.desc}</p>
-              </div>
-              <span
-                className="text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0"
-                style={{ background: "rgba(37,112,245,0.1)", color: "#4d8fff" }}
-              >
-                {item.category}
-              </span>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );

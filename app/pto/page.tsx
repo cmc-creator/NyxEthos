@@ -76,14 +76,24 @@ export default async function PTOPage() {
             Manage time-off requests and leave balances.
           </p>
         </div>
-        <Link
-          href="/pto/new"
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90"
-          style={{ background: "linear-gradient(135deg, #2570f5, #6366f1)" }}
-        >
-          <Plus size={14} />
-          New Request
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/pto/calendar"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+            style={{ background: "rgba(37,112,245,0.15)", color: "#4d8fff", border: "1px solid rgba(37,112,245,0.3)" }}
+          >
+            <CalendarDays size={14} />
+            Calendar
+          </Link>
+          <Link
+            href="/pto/new"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90"
+            style={{ background: "linear-gradient(135deg, #2570f5, #6366f1)" }}
+          >
+            <Plus size={14} />
+            New Request
+          </Link>
+        </div>
       </div>
 
       {/* Stats */}

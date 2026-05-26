@@ -46,6 +46,17 @@ export async function POST(req: Request) {
         note: note || null,
       },
     });
+
+    await prisma.notification.create({
+      data: {
+        orgId,
+        type: "time_entry",
+        title: "Time Entry Submitted",
+        body: `${employee.firstName} ${employee.lastName} logged ${hours}h (${type || "regular"}) on ${new Date(date).toLocaleDateString()}.`,
+        href: "/time",
+      },
+    });
+
     return NextResponse.json(entry, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Failed to create time entry." }, { status: 500 });

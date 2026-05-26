@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -20,10 +20,12 @@ import {
   UserPlus,
   FileBarChart,
   Settings,
+  Search,
 } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useTheme } from "@/context/ThemeContext";
 import NotificationBell from "@/components/NotificationBell";
+import CommandPalette from "@/components/CommandPalette";
 
 const navSections = [
   {
@@ -63,6 +65,9 @@ export default function AppSidebar({ userName }: { userName?: string | null }) {
   const initial = (userName?.[0] ?? "U").toUpperCase();
 
   return (
+    <>
+      <CommandPalette />
+
     <aside
       style={{
         width: compact ? "56px" : "240px",
@@ -127,6 +132,33 @@ export default function AppSidebar({ userName }: { userName?: string | null }) {
           <NotificationBell />
         </div>
       )}
+      {/* Search button */}
+      <div style={{ padding: compact ? "6px 6px 0" : "10px 10px 0" }}>
+        <button
+          onClick={() => {
+            window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }));
+          }}
+          title="Search (Ctrl+K)"
+          style={{
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: compact ? "center" : "flex-start",
+            gap: 8,
+            padding: compact ? "8px 0" : "7px 10px",
+            background: "rgba(37,112,245,0.06)",
+            border: "1px solid rgba(37,112,245,0.15)",
+            borderRadius: 10,
+            cursor: "pointer",
+            color: "#7a9fc0",
+            fontSize: 12,
+          }}
+        >
+          <Search size={14} />
+          {!compact && <span style={{ flex: 1, textAlign: "left" }}>Search...</span>}
+          {!compact && <kbd style={{ fontSize: 10, color: "#4a7099", background: "rgba(37,112,245,0.08)", border: "1px solid rgba(37,112,245,0.15)", borderRadius: 4, padding: "1px 5px" }}>⌃K</kbd>}
+        </button>
+      </div>
       <nav
         style={{
           flex: 1,
@@ -333,6 +365,7 @@ export default function AppSidebar({ userName }: { userName?: string | null }) {
           {!compact && <span>Sign out</span>}
         </button>
       </div>
-    </aside>
+  </aside>
+    </>
   );
 }

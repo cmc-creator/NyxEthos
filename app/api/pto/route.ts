@@ -52,6 +52,17 @@ export async function POST(req: Request) {
         notes: notes || null,
       },
     });
+
+    await prisma.notification.create({
+      data: {
+        orgId,
+        type: "pto_request",
+        title: "New PTO Request",
+        body: `${employee.firstName} ${employee.lastName} requested ${diffDays}d ${type || "vacation"} leave.`,
+        href: "/pto",
+      },
+    });
+
     return NextResponse.json(request, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Failed to create leave request." }, { status: 500 });
