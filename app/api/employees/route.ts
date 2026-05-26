@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { logAudit } from "@/lib/audit";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getOrgId(session: any): string | null {
@@ -49,6 +50,16 @@ export async function POST(req: Request) {
         orgId,
       },
     });
+    logAudit({
+      orgId,
+      userId: session?.user?.id,
+      userEmail: session?.user?.email ?? undefined,
+      action: "CREATE_EMPLOYEE",
+      entityType: "Employee",
+      entityId: employee.id,
+      details: `${firstName} ${lastName} — ${jobTitle ?? department ?? ""}`,
+    });
+
     return NextResponse.json(employee, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Failed to create employee." }, { status: 500 });

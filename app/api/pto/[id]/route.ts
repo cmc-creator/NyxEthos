@@ -2,6 +2,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { logAudit } from "@/lib/audit";
 
 function getOrgId(session: { user?: { orgId?: string } } | null): string | null {
   return session?.user?.orgId ?? null;
@@ -59,6 +60,16 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       data: { orgId, type: "pto_rejected", title: "PTO Request Rejected", body: `${name}'\''s ${request.type} leave request was rejected.`, href: "/pto" },
     });
   }
+
+  logAudit({
+    orgId,
+    userId: session?.user?.id,
+    userEmail: session?.user?.email ?? undefined,
+    action: status === "approved" ? "APPROVE_PTO" : status === "rejected" ? "REJECT_PTO" : "UPDATE_PTO",
+    entityType: "LeaveRequest",
+    entityId: id,
+    details: `${name} – ${request.type} (${request.days}d) → ${status}`,
+  });
 
   return NextResponse.json(updated);
 }

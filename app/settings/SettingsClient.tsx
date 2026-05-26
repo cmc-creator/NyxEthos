@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Moon, Sun, PanelLeft, LayoutList, Save, User, LogOut, Users } from "lucide-react";
+import { Moon, Sun, PanelLeft, LayoutList, Save, User, LogOut, Users, Shield } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { useTheme, Theme, LayoutMode } from "@/context/ThemeContext";
@@ -372,6 +372,21 @@ export default function SettingsClient({ orgName, orgId }: Props) {
             </div>
             <span className="text-xs" style={{ color: c3 }}>
               Invite &amp; manage →
+            </span>
+          </Link>
+          <div style={{ height: 1, background: border }} />
+          <Link
+            href="/settings/audit"
+            className="flex items-center justify-between px-6 py-4 transition-colors hover:bg-blue-500/5"
+          >
+            <div className="flex items-center gap-3">
+              <Shield size={14} style={{ color: "#a78bfa" }} />
+              <span className="text-sm" style={{ color: c1 }}>
+                Audit Log
+              </span>
+            </div>
+            <span className="text-xs" style={{ color: c3 }}>
+              All admin actions →
             </span>
           </Link>
           <div style={{ height: 1, background: border }} />

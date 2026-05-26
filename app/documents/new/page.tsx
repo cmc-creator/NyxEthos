@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { FolderOpen, ArrowLeft } from "lucide-react";
+import { FolderOpen, ArrowLeft, Upload, X, FileText } from "lucide-react";
 
 type Employee = { id: string; firstName: string; lastName: string };
 
@@ -11,122 +11,222 @@ export default function NewDocumentPage() {
   const router = useRouter();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const [uploadedFile, setUploadedFile] = useState<{ name: string; url: string; size: number } | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
   const [form, setForm] = useState({
-    name: "",
-    category: "other",
+    title: "",
+    type: "offer_letter",
     employeeId: "",
-    fileUrl: "",
-    size: "",
+    url: "",
+    notes: "",
   });
+
+  const c1 = "#eef5ff";
+  const c3 = "#7a9fc0";
+  const border = "rgba(37,112,245,0.12)";
 
   useEffect(() => {
     fetch("/api/employees")
       .then((r) => r.json())
-      .then((d) => setEmployees(Array.isArray(d) ? d : []))
-      .catch(() => {});
+      .then((d) => setEmployees(Array.isArray(d) ? d : []));
   }, []);
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setError("");
+    const data = new FormData();
+    data.append("file", file);
+    const res = await fetch("/api/upload", { method: "POST", body: data });
+    if (res.ok) {
+      const json = await res.json();
+      setUploadedFile({ name: file.name, url: json.url, size: json.size });
+      setForm((f) => ({ ...f, url: json.url, title: f.title || file.name.replace(/\.[^.]+$/, "") }));
+    } else {
+      const json = await res.json().catch(() => ({}));
+      setError(json.error ?? "Upload failed — paste a URL instead.");
+    }
+    setUploading(false);
+  }
+
+  function removeFile() {
+    setUploadedFile(null);
+    setForm((f) => ({ ...f, url: "" }));
+    if (fileRef.current) fileRef.current.value = "";
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.name) { setError("Document name is required."); return; }
+    if (!form.title || !form.url) { setError("Title and file/URL are required."); return; }
     setLoading(true);
     setError("");
-    try {
-      const res = await fetch("/api/documents", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, employeeId: form.employeeId || null }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        setError(data.error || "Failed to add document.");
-      } else {
-        router.push("/documents");
-        router.refresh();
-      }
-    } catch {
-      setError("Something went wrong.");
-    } finally {
+    const res = await fetch("/api/documents", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+    if (res.ok) {
+      router.push("/documents");
+      router.refresh();
+    } else {
+      const j = await res.json().catch(() => ({}));
+      setError(j.error ?? "Failed to save document.");
       setLoading(false);
     }
   }
 
   const inputStyle = {
-    background: "rgba(6,14,30,0.8)",
-    border: "1px solid rgba(37,112,245,0.22)",
-    color: "#eef5ff",
-    borderRadius: "0.75rem",
-    padding: "0.6rem 0.875rem",
-    fontSize: "0.875rem",
-    width: "100%",
-    outline: "none",
-  };
-  const labelStyle = {
-    display: "block",
-    fontSize: "0.75rem",
-    fontWeight: 600,
-    textTransform: "uppercase" as const,
-    letterSpacing: "0.05em",
-    color: "#7a9fc0",
-    marginBottom: "0.4rem",
+    background: "rgba(37,112,245,0.06)",
+    border: `1px solid ${border}`,
+    color: c1,
   };
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
-      <div className="mb-6">
-        <Link href="/documents" className="inline-flex items-center gap-2 text-sm mb-4 opacity-60 hover:opacity-100 transition-opacity" style={{ color: "#4d8fff" }}>
-          <ArrowLeft size={13} /> Back to Documents
+    <div className="p-8 max-w-xl mx-auto">
+      <div className="flex items-center gap-2 mb-6">
+        <Link href="/documents" className="flex items-center gap-1 text-xs hover:opacity-80 transition-opacity" style={{ color: c3 }}>
+          <ArrowLeft size={13} /> Documents
         </Link>
-        <h1 className="text-2xl font-bold font-heading" style={{ color: "#eef5ff" }}>Add Document</h1>
-        <p className="mt-1 text-sm" style={{ color: "#7a9fc0" }}>Add a document record to the system.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="glass-card rounded-2xl p-6 space-y-5">
-        <div>
-          <label style={labelStyle}>Document Name *</label>
-          <input type="text" placeholder="e.g. Employment Contract — Jane Doe" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} style={inputStyle} required />
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(37,112,245,0.15)" }}>
+          <FolderOpen size={18} style={{ color: "#4d8fff" }} />
         </div>
+        <div>
+          <h1 className="text-2xl font-bold font-heading" style={{ color: c1 }}>Add Document</h1>
+          <p className="text-sm" style={{ color: c3 }}>Upload a file or paste a URL</p>
+        </div>
+      </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label style={labelStyle}>Category</label>
-            <select value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))} style={inputStyle}>
-              <option value="contract">Contract</option>
-              <option value="policy">Policy</option>
-              <option value="form">Form</option>
-              <option value="report">Report</option>
-              <option value="other">Other</option>
-            </select>
+      <form onSubmit={handleSubmit} className="glass-card rounded-2xl p-6 space-y-4">
+        {error && (
+          <div className="rounded-xl px-4 py-3 text-sm" style={{ background: "rgba(248,113,113,0.12)", color: "#f87171" }}>
+            {error}
           </div>
+        )}
+
+        {/* File upload */}
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: c3 }}>
+            File Upload
+          </label>
+          {uploadedFile ? (
+            <div className="flex items-center gap-3 rounded-xl px-4 py-3" style={{ background: "rgba(52,211,153,0.08)", border: "1px solid rgba(52,211,153,0.2)" }}>
+              <FileText size={16} style={{ color: "#34d399" }} />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate" style={{ color: c1 }}>{uploadedFile.name}</p>
+                <p className="text-xs" style={{ color: c3 }}>{(uploadedFile.size / 1024).toFixed(0)} KB</p>
+              </div>
+              <button type="button" onClick={removeFile} style={{ color: c3 }}>
+                <X size={14} />
+              </button>
+            </div>
+          ) : (
+            <div>
+              <input ref={fileRef} type="file" className="hidden" onChange={handleFileChange} />
+              <button
+                type="button"
+                disabled={uploading}
+                onClick={() => fileRef.current?.click()}
+                className="flex items-center justify-center gap-2 w-full rounded-xl py-3 text-sm font-medium transition-opacity hover:opacity-80 disabled:opacity-50"
+                style={{ background: "rgba(37,112,245,0.08)", border: `1px dashed rgba(37,112,245,0.3)`, color: c3 }}
+              >
+                <Upload size={14} />
+                {uploading ? "Uploading…" : "Choose file to upload"}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* URL fallback */}
+        {!uploadedFile && (
           <div>
-            <label style={labelStyle}>Employee (optional)</label>
-            <select value={form.employeeId} onChange={(e) => setForm((f) => ({ ...f, employeeId: e.target.value }))} style={inputStyle}>
-              <option value="">Organization-wide</option>
-              {employees.map((emp) => (
-                <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>
-              ))}
-            </select>
+            <label className="block text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: c3 }}>
+              …or paste URL
+            </label>
+            <input
+              type="url"
+              value={form.url}
+              onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
+              placeholder="https://"
+              className="w-full rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
+              style={inputStyle}
+            />
           </div>
-        </div>
+        )}
 
+        {/* Title */}
         <div>
-          <label style={labelStyle}>File URL (optional)</label>
-          <input type="url" placeholder="https://drive.google.com/…" value={form.fileUrl} onChange={(e) => setForm((f) => ({ ...f, fileUrl: e.target.value }))} style={inputStyle} />
-          <p className="text-xs mt-1.5" style={{ color: "#7a9fc0" }}>Link to document in Google Drive, Dropbox, SharePoint, etc.</p>
+          <label className="block text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: c3 }}>Title *</label>
+          <input
+            required
+            value={form.title}
+            onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+            placeholder="Offer Letter – Jane Doe"
+            className="w-full rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
+            style={inputStyle}
+          />
         </div>
 
+        {/* Type */}
         <div>
-          <label style={labelStyle}>File Size (optional)</label>
-          <input type="text" placeholder="e.g. 245 KB" value={form.size} onChange={(e) => setForm((f) => ({ ...f, size: e.target.value }))} style={inputStyle} />
+          <label className="block text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: c3 }}>Document Type</label>
+          <select
+            value={form.type}
+            onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
+            className="w-full rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
+            style={inputStyle}
+          >
+            {["offer_letter", "contract", "id", "tax_form", "policy", "review", "other"].map((t) => (
+              <option key={t} value={t}>{t.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}</option>
+            ))}
+          </select>
         </div>
 
-        {error && <p className="text-sm px-4 py-3 rounded-xl" style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)" }}>{error}</p>}
+        {/* Employee */}
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: c3 }}>Employee (optional)</label>
+          <select
+            value={form.employeeId}
+            onChange={(e) => setForm((f) => ({ ...f, employeeId: e.target.value }))}
+            className="w-full rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
+            style={inputStyle}
+          >
+            <option value="">— Org-wide —</option>
+            {employees.map((emp) => (
+              <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>
+            ))}
+          </select>
+        </div>
 
-        <div className="flex gap-3 pt-2">
-          <Link href="/documents" className="flex-1 text-center py-2.5 rounded-xl text-sm font-semibold hover:opacity-80 transition-opacity" style={{ border: "1px solid rgba(37,112,245,0.2)", color: "#7a9fc0" }}>Cancel</Link>
-          <button type="submit" disabled={loading} className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-opacity disabled:opacity-50" style={{ background: "linear-gradient(135deg, #2570f5, #6366f1)" }}>
-            <FolderOpen size={14} /> {loading ? "Saving…" : "Add Document"}
+        {/* Notes */}
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: c3 }}>Notes</label>
+          <textarea
+            rows={3}
+            value={form.notes}
+            onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+            className="w-full rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500/30 resize-none"
+            style={inputStyle}
+          />
+        </div>
+
+        <div className="flex justify-end gap-3 pt-1">
+          <Link href="/documents" className="px-5 py-2.5 rounded-xl text-sm font-medium transition-opacity hover:opacity-80" style={{ background: "rgba(37,112,245,0.08)", color: c3 }}>
+            Cancel
+          </Link>
+          <button
+            type="submit"
+            disabled={loading || uploading}
+            className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            style={{ background: "linear-gradient(135deg, #2570f5, #6366f1)" }}
+          >
+            {loading ? "Saving…" : "Add Document"}
           </button>
         </div>
       </form>

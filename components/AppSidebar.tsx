@@ -21,6 +21,7 @@ import {
   FileBarChart,
   Settings,
   Search,
+  UserCircle,
 } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useTheme } from "@/context/ThemeContext";
@@ -261,6 +262,33 @@ export default function AppSidebar({ userName }: { userName?: string | null }) {
           flexShrink: 0,
         }}
       >
+        {/* My Profile */}
+        <Link
+          href="/me"
+          title={compact ? "My Profile" : undefined}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: compact ? "center" : "flex-start",
+            gap: compact ? 0 : 10,
+            padding: compact ? "8px 0" : "8px 10px",
+            borderRadius: 10,
+            fontSize: 13,
+            fontWeight: 500,
+            color: pathname === "/me" ? "#eef5ff" : "#7a9fc0",
+            background:
+              pathname === "/me"
+                ? "linear-gradient(135deg,rgba(37,112,245,0.2),rgba(77,143,255,0.1))"
+                : "transparent",
+            textDecoration: "none",
+            transition: "all 0.15s",
+            marginBottom: 2,
+          }}
+        >
+          <UserCircle size={compact ? 17 : 14} />
+          {!compact && <span>My Profile</span>}
+        </Link>
+
         {/* Settings */}
         <Link
           href="/settings"

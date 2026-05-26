@@ -102,7 +102,7 @@ export default function ReportsClient({ headcount, payroll, timeData, ptoData }:
   const downloadCSV = async (type: string) => {
     setDownloading(type);
     try {
-      const res = await fetch(`/api/reports?type=${type}`);
+      const res = await fetch(`/api/export?type=${type}`);
       if (!res.ok) throw new Error("Export failed");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);

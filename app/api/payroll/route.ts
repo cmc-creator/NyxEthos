@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { logAudit } from "@/lib/audit";
 
 function getOrgId(session: { user?: { orgId?: string } } | null): string | null {
   return session?.user?.orgId ?? null;
@@ -78,6 +79,16 @@ export async function POST(req: Request) {
         payStubs: { create: stubs },
       },
       include: { payStubs: true },
+    });
+
+    logAudit({
+      orgId,
+      userId: session?.user?.id,
+      userEmail: session?.user?.email ?? undefined,
+      action: "CREATE_PAYROLL_RUN",
+      entityType: "PayrollRun",
+      entityId: run.id,
+      details: `${period} — ${employees.length} employees — $${Math.round(totalNet).toLocaleString()} net`,
     });
 
     return NextResponse.json(run, { status: 201 });
