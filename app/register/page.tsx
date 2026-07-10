@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { Mail, Lock, User, Phone, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 const schema = z.object({
   first_name: z.string().min(1, 'Required'),
@@ -27,16 +29,66 @@ type FormData = z.infer<typeof schema>;
 export default function RegisterPage() {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
-  async function onSubmit(_data: FormData) {
+  async function onSubmit(data: FormData) {
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1000));
+
+    const supabase = createClient();
+    const { data: signUpData, error } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+      options: {
+        data: {
+          first_name: data.first_name,
+          last_name: data.last_name,
+          phone: data.phone,
+        },
+      },
+    });
+
+    if (error) {
+      setLoading(false);
+      toast.error(error.message || 'Unable to create account.');
+      return;
+    }
+
+    if (signUpData.user) {
+      const { error: profileError } = await supabase
+        .from('customers')
+        .upsert(
+          {
+            user_id: signUpData.user.id,
+            first_name: data.first_name,
+            last_name: data.last_name,
+            email: data.email,
+            phone: data.phone,
+          },
+          { onConflict: 'user_id' }
+        );
+
+      if (profileError) {
+        setLoading(false);
+        toast.error('Account created, but profile setup failed. Please contact support.');
+        return;
+      }
+    }
+
     setLoading(false);
-    toast.info('Connect your Supabase project to enable registration.');
+
+    if (signUpData.session) {
+      toast.success('Account created successfully.');
+      router.push('/dashboard');
+      router.refresh();
+      return;
+    }
+
+    toast.success('Account created. Check your email to confirm your address, then sign in.');
+    router.push('/login');
   }
 
   return (

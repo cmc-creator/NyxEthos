@@ -198,7 +198,7 @@ export default function ServicesContent() {
       {/* Service categories */}
       <div className="py-16 bg-[#080f24]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-20">
-          {categories.map((cat, ci) => {
+          {categories.map((cat) => {
             const Icon = cat.icon;
             return (
               <FadeIn key={cat.id} delay={0.05} className="scroll-mt-32">

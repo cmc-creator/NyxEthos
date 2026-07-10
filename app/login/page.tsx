@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 const schema = z.object({
   email: z.string().email('Valid email required'),
@@ -19,6 +21,7 @@ type FormData = z.infer<typeof schema>;
 export default function LoginPage() {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const {
     register,
@@ -26,11 +29,27 @@ export default function LoginPage() {
     formState: { errors },
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
-  async function onSubmit(_data: FormData) {
+  async function onSubmit(data: FormData) {
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1000));
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password,
+    });
+
     setLoading(false);
-    toast.info('Supabase auth not configured yet — connect your Supabase project to enable login.');
+
+    if (error) {
+      toast.error(error.message || 'Unable to sign in.');
+      return;
+    }
+
+    toast.success('Signed in successfully.');
+    const params = new URLSearchParams(window.location.search);
+    const nextPath = params.get('next') || '/dashboard';
+    router.push(nextPath);
+    router.refresh();
   }
 
   return (

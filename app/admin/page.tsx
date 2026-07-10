@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   DollarSign,
@@ -9,7 +10,6 @@ import {
   TrendingUp,
   Calendar,
   ArrowRight,
-  Clock,
 } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -24,21 +24,35 @@ import {
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import AdminLayout from '@/components/admin/AdminLayout';
 
-const revenueData = [
-  { month: 'Jan', revenue: 3200 },
-  { month: 'Feb', revenue: 4100 },
-  { month: 'Mar', revenue: 3800 },
-  { month: 'Apr', revenue: 5200 },
-  { month: 'May', revenue: 4700 },
-  { month: 'Jun', revenue: 6100 },
-];
+type DashboardStats = {
+  thisMonthRevenue: number;
+  activeJobs: number;
+  totalCustomers: number;
+  completedJobs: number;
+  totalRevenue: number;
+};
 
-const recentJobs = [
-  { id: '1', customer: 'John Smith', service: 'Oil Change', status: 'completed', date: '2026-05-08', amount: 75 },
-  { id: '2', customer: 'Maria Garcia', service: 'Brake Replacement', status: 'in_progress', date: '2026-05-09', amount: 180 },
-  { id: '3', customer: 'David Lee', service: 'AC Recharge', status: 'confirmed', date: '2026-05-10', amount: 95 },
-  { id: '4', customer: 'Sarah Johnson', service: 'Battery Replacement', status: 'pending', date: '2026-05-11', amount: 140 },
-];
+type RevenuePoint = {
+  month: string;
+  revenue: number;
+};
+
+type DashboardJob = {
+  id: string;
+  customer: string;
+  service: string;
+  status: JobStatus;
+  date: string;
+  amount: number;
+};
+
+type TodayJob = {
+  id: string;
+  time: string;
+  name: string;
+  service: string;
+  status: JobStatus;
+};
 
 type JobStatus = 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
 
@@ -58,7 +72,13 @@ function FadeIn({ children, delay = 0, className = '' }: { children: React.React
   );
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+type RevenueTooltipProps = {
+  active?: boolean;
+  payload?: Array<{ value: number }>;
+  label?: string;
+};
+
+const CustomTooltip = ({ active, payload, label }: RevenueTooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-[#0f1e3d] border border-[#1e3260] rounded-xl px-4 py-3 text-sm">
@@ -71,6 +91,58 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function AdminDashboard() {
+  const [stats, setStats] = useState<DashboardStats>({
+    thisMonthRevenue: 0,
+    activeJobs: 0,
+    totalCustomers: 0,
+    completedJobs: 0,
+    totalRevenue: 0,
+  });
+  const [revenueData, setRevenueData] = useState<RevenuePoint[]>([]);
+  const [recentJobs, setRecentJobs] = useState<DashboardJob[]>([]);
+  const [todayJobs, setTodayJobs] = useState<TodayJob[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadAdminDashboard() {
+      const response = await fetch('/api/admin/dashboard');
+      if (!response.ok || !isMounted) {
+        return;
+      }
+      const payload = await response.json();
+      setStats(payload.stats || {
+        thisMonthRevenue: 0,
+        activeJobs: 0,
+        totalCustomers: 0,
+        completedJobs: 0,
+        totalRevenue: 0,
+      });
+      setRevenueData(payload.revenueData || []);
+      setRecentJobs(payload.recentJobs || []);
+      setTodayJobs(payload.todayJobs || []);
+    }
+
+    loadAdminDashboard();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const revenueDelta = useMemo(() => {
+    if (revenueData.length < 2) {
+      return 'N/A';
+    }
+    const prev = revenueData[revenueData.length - 2].revenue;
+    const current = revenueData[revenueData.length - 1].revenue;
+    if (prev === 0) {
+      return 'N/A';
+    }
+    const delta = ((current - prev) / prev) * 100;
+    return `${delta >= 0 ? '+' : ''}${delta.toFixed(0)}%`;
+  }, [revenueData]);
+
   return (
     <AdminLayout>
       <FadeIn>
@@ -91,10 +163,10 @@ export default function AdminDashboard() {
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {[
-          { label: 'Revenue This Month', value: '$6,100', icon: DollarSign, color: '#e84c1a', change: '+18%' },
-          { label: 'Active Jobs', value: '3', icon: Briefcase, color: '#3b82f6', change: '2 today' },
-          { label: 'Total Customers', value: '48', icon: Users, color: '#10b981', change: '+4 this week' },
-          { label: 'Jobs Completed', value: '127', icon: CheckCircle2, color: '#eab308', change: 'All time' },
+          { label: 'Revenue This Month', value: formatCurrency(stats.thisMonthRevenue), icon: DollarSign, color: '#e84c1a', change: revenueDelta },
+          { label: 'Active Jobs', value: String(stats.activeJobs), icon: Briefcase, color: '#3b82f6', change: `${todayJobs.length} today` },
+          { label: 'Total Customers', value: String(stats.totalCustomers), icon: Users, color: '#10b981', change: 'Current' },
+          { label: 'Jobs Completed', value: String(stats.completedJobs), icon: CheckCircle2, color: '#eab308', change: 'All time' },
         ].map(({ label, value, icon: Icon, color, change }, i) => (
           <FadeIn key={label} delay={i * 0.06}>
             <div className="glass-card rounded-2xl p-5">
@@ -153,11 +225,7 @@ export default function AdminDashboard() {
               </Link>
             </div>
             <div className="space-y-3">
-              {[
-                { time: '9:00 AM', name: 'Maria Garcia', service: 'Brakes', status: 'in_progress' },
-                { time: '11:30 AM', name: 'David Lee', service: 'AC Recharge', status: 'confirmed' },
-                { time: '2:00 PM', name: 'Tom Wilson', service: 'Diagnostics', status: 'confirmed' },
-              ].map((appt) => {
+              {todayJobs.map((appt) => {
                 const cfg = statusConfig[appt.status as JobStatus];
                 return (
                   <div key={appt.time} className="flex items-center gap-3 py-2.5 border-b border-[#1e3260]/30 last:border-0">
@@ -172,6 +240,9 @@ export default function AdminDashboard() {
                   </div>
                 );
               })}
+              {todayJobs.length === 0 && (
+                <div className="text-[#7a8fb5] text-sm py-2">No jobs scheduled for today.</div>
+              )}
             </div>
           </div>
         </FadeIn>

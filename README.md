@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NyxEthos (Auto-Docs)
 
-## Getting Started
+NyxEthos is a Next.js 16 customer and admin portal for a mobile mechanic business.
 
-First, run the development server:
+Core features include:
+- Customer registration and login with Supabase Auth
+- Booking creation and booking history
+- Admin-restricted dashboard and management views
+- Invoice and Stripe payment integration (payment intent + webhook)
+- Contact intake API with rate limiting and anti-spam tracking
+- Admin audit logging for status-changing operations
+
+## Tech Stack
+
+- Next.js 16 (App Router)
+- React 19
+- TypeScript
+- Supabase (Auth + Postgres + RLS)
+- Stripe
+- Tailwind CSS
+
+## Local Setup
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Copy environment variables:
+
+```bash
+cp .env.example .env.local
+```
+
+3. Fill in `.env.local`:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `STRIPE_SECRET_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+- `CONTACT_RATE_LIMIT_SALT`
+
+4. Apply database migrations:
+- Run [supabase/migrations/0001_initial_schema.sql](supabase/migrations/0001_initial_schema.sql)
+- Run [supabase/migrations/0002_commercial_hardening.sql](supabase/migrations/0002_commercial_hardening.sql)
+
+If you are bootstrapping manually in the SQL editor, [supabase/schema.sql](supabase/schema.sql) is the canonical full schema snapshot.
+
+5. Start development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Quality Commands
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run build
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## CI
 
-## Learn More
+GitHub Actions workflow is defined at [.github/workflows/ci.yml](.github/workflows/ci.yml) and runs:
+- Lint
+- Typecheck
+- Test
+- Build
 
-To learn more about Next.js, take a look at the following resources:
+## Production Notes
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Route protection is enforced via [proxy.ts](proxy.ts) for customer/admin pages.
+- Stripe webhook processing is idempotent via `stripe_webhook_events`.
+- Stripe reconciliation endpoint: `POST /api/admin/stripe/reconcile` (admin only).
+- Contact form endpoint: `POST /api/contact` with per-IP hourly throttling.
+- Admin status updates write audit records to `admin_audit_logs`.
+- Ensure Stripe webhook is configured to call `/api/stripe/webhook`.
+- Use HTTPS and secure environment variable management in production.

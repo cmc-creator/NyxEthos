@@ -1,9 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
-import Image from 'next/image';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import type { Invoice } from '@/types';
 
 // Extend the basic Invoice type for display
 export interface InvoiceData {

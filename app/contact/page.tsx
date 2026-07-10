@@ -16,7 +16,6 @@ import {
   MessageSquare,
   Wrench,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 
@@ -69,12 +68,31 @@ export default function ContactPage() {
     formState: { errors },
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
-  async function onSubmit(_data: FormData) {
+  async function onSubmit(data: FormData) {
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1200));
-    setLoading(false);
-    setSubmitted(true);
-    toast.success('Message sent! We\'ll reach out within the hour.');
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Failed to submit message');
+      }
+
+      setSubmitted(true);
+      toast.success('Message sent! We\'ll reach out within the hour.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to submit message.';
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

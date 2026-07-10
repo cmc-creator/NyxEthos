@@ -31,7 +31,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const isActive = (href: string, exact?: boolean) =>
     exact ? pathname === href : pathname.startsWith(href);
 
-  const SidebarContent = () => (
+  const renderSidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="px-6 py-6 border-b border-[#1e3260]/50">
@@ -87,7 +87,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="min-h-screen hex-pattern flex">
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex flex-col w-56 bg-[#0a1628]/90 backdrop-blur border-r border-[#1e3260]/50 fixed inset-y-0 z-30">
-        <SidebarContent />
+        {renderSidebarContent()}
       </aside>
 
       {/* Mobile sidebar overlay */}
@@ -100,7 +100,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <X size={20} />
               </button>
             </div>
-            <SidebarContent />
+            {renderSidebarContent()}
           </aside>
         </div>
       )}

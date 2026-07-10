@@ -1,41 +1,45 @@
 'use client';
 
-import { useState } from 'react';
-import { Search, Users, Phone, Mail, Car, ChevronDown } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Search, Phone, Mail, Car, ChevronDown } from 'lucide-react';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import AdminLayout from '@/components/admin/AdminLayout';
 
-const customers = [
-  {
-    id: '1', name: 'John Smith', email: 'john@example.com', phone: '(602) 555-0101',
-    address: '1234 W McDowell Rd, Phoenix, AZ 85007', vehicles: ['2020 Honda CR-V'],
-    bookings: 3, totalSpent: 350, joined: '2026-01-15', lastService: '2026-05-10',
-  },
-  {
-    id: '2', name: 'Maria Garcia', email: 'maria@example.com', phone: '(480) 555-0202',
-    address: '890 E Broadway Rd, Tempe, AZ 85281', vehicles: ['2018 Toyota Camry', '2015 Honda Civic'],
-    bookings: 5, totalSpent: 620, joined: '2025-11-02', lastService: '2026-05-09',
-  },
-  {
-    id: '3', name: 'David Lee', email: 'david@example.com', phone: '(623) 555-0303',
-    address: '5678 W Thomas Rd, Glendale, AZ 85301', vehicles: ['2019 Ford F-150'],
-    bookings: 2, totalSpent: 190, joined: '2026-02-20', lastService: '2026-05-10',
-  },
-  {
-    id: '4', name: 'Sarah Johnson', email: 'sarah@example.com', phone: '(480) 555-0404',
-    address: '3456 S Mill Ave, Tempe, AZ 85281', vehicles: ['2021 Chevrolet Equinox'],
-    bookings: 1, totalSpent: 140, joined: '2026-04-30', lastService: '2026-05-11',
-  },
-  {
-    id: '5', name: 'Tom Wilson', email: 'tom@example.com', phone: '(602) 555-0505',
-    address: '7890 N 7th St, Phoenix, AZ 85014', vehicles: ['2017 Nissan Altima'],
-    bookings: 4, totalSpent: 380, joined: '2025-09-10', lastService: '2026-05-08',
-  },
-];
+type AdminCustomer = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  vehicles: string[];
+  bookings: number;
+  totalSpent: number;
+  joined: string;
+  lastService: string;
+};
 
 export default function AdminCustomersPage() {
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [customers, setCustomers] = useState<AdminCustomer[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadCustomers() {
+      const response = await fetch('/api/admin/customers');
+      if (!response.ok || !isMounted) {
+        return;
+      }
+      const payload = await response.json();
+      setCustomers(payload.customers || []);
+    }
+
+    loadCustomers();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const filtered = customers.filter(
     (c) =>

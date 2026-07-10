@@ -1,37 +1,88 @@
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import { notFound } from 'next/navigation';
 import { InvoiceTemplate } from '@/components/invoice/InvoiceTemplate';
 
-// Minimal print page — white background, no nav  
-// Usage: /dashboard/invoices/[id]/print
-// Replace mockData with Supabase query using params.id
+async function createSupabaseServer() {
+  const cookieStore = await cookies();
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
+        },
+      },
+    }
+  );
+}
 
-const mockInvoice = {
-  id: '1',
-  number: 'AD-029847',
-  date: '2026-04-15',
-  dueDate: '2026-04-29',
-  status: 'paid' as const,
-  customer: {
-    name: 'John Smith',
-    email: 'john@example.com',
-    phone: '(602) 555-0101',
-    address: '1234 W McDowell Rd, Phoenix, AZ 85007',
-  },
-  vehicle: { year: '2020', make: 'Honda', model: 'CR-V', vin: '2HKRW2H56LH123456' },
-  items: [
-    { description: 'Brake Pad Replacement (Front)', qty: 1, unitPrice: 99 },
-    { description: 'Labor (2hrs @ $60)', qty: 2, unitPrice: 60 },
-  ],
-  tax: 8.6,
-  notes: 'Rear pads at 40% — recommend replacement in 6 months.',
-};
-
-export default function InvoicePrintPage({
+export default async function InvoicePrintPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  // TODO: Replace with Supabase fetch by params.id
-  const invoice = mockInvoice;
+  const { id } = await params;
+  const supabase = await createSupabaseServer();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    notFound();
+  }
+
+  const { data: customer } = await supabase
+    .from('customers')
+    .select('id')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!customer) {
+    notFound();
+  }
+
+  const { data: row } = await supabase
+    .from('invoices')
+    .select('*')
+    .eq('id', id)
+    .eq('customer_id', customer.id)
+    .single();
+
+  if (!row) {
+    notFound();
+  }
+
+  const mappedItems = (row.items || []).map((item: { description: string; quantity: number; unit_price: number }) => ({
+    description: item.description,
+    qty: item.quantity,
+    unitPrice: item.unit_price,
+  }));
+
+  const invoice = {
+    id: row.id,
+    number: row.invoice_number,
+    date: row.created_at,
+    dueDate: row.due_date || row.created_at,
+    status: row.status === 'cancelled' ? 'draft' : row.status,
+    customer: {
+      name: row.customer_name || 'Customer',
+      email: row.customer_email || 'N/A',
+      phone: row.customer_phone || 'N/A',
+      address: 'Address on file',
+    },
+    vehicle: { year: '', make: '', model: '', vin: '' },
+    items: mappedItems,
+    tax: (row.tax_rate || 0) * 100,
+    notes: row.notes || '',
+  };
 
   return (
     <html>

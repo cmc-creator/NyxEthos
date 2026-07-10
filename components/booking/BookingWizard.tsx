@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import Link from 'next/link';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,7 +12,6 @@ import {
   Calendar,
   Car,
   User,
-  CreditCard,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
@@ -137,15 +137,44 @@ export default function BookingWizard() {
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     setValue,
     trigger,
     formState: { errors },
   } = useForm<BookingFormData>({ resolver: zodResolver(schema) });
 
-  const watchService = watch('service_id');
-  const watchDate = watch('scheduled_date');
-  const watchTime = watch('scheduled_time');
+  const [
+    watchService,
+    watchDate,
+    watchTime,
+    watchAddress,
+    watchCity,
+    watchZip,
+    watchVehicleYear,
+    watchVehicleMake,
+    watchVehicleModel,
+    watchFirstName,
+    watchLastName,
+    watchEmail,
+    watchPhone,
+  ] = useWatch({
+    control,
+    name: [
+      'service_id',
+      'scheduled_date',
+      'scheduled_time',
+      'address',
+      'city',
+      'zip',
+      'vehicle_year',
+      'vehicle_make',
+      'vehicle_model',
+      'first_name',
+      'last_name',
+      'email',
+      'phone',
+    ],
+  });
   const selectedService = services.find((s) => s.id === watchService);
 
   // Min date: tomorrow
@@ -171,11 +200,54 @@ export default function BookingWizard() {
 
   async function onSubmit(data: BookingFormData) {
     setIsLoading(true);
-    // Simulate API call
-    await new Promise((r) => setTimeout(r, 1500));
-    setIsLoading(false);
-    setSubmitted(true);
-    toast.success('Booking confirmed! Check your email for details.');
+
+    try {
+      const selected = services.find((svc) => svc.id === data.service_id);
+
+      const response = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          service_id: data.service_id,
+          service_name: selected?.label || 'Other / Not sure',
+          customer: {
+            first_name: data.first_name,
+            last_name: data.last_name,
+            email: data.email,
+            phone: data.phone,
+          },
+          vehicle: {
+            year: data.vehicle_year,
+            make: data.vehicle_make,
+            model: data.vehicle_model,
+            vin: data.vehicle_vin,
+          },
+          scheduled_date: data.scheduled_date,
+          scheduled_time: data.scheduled_time,
+          address: data.address,
+          city: data.city,
+          zip: data.zip,
+          notes: data.notes,
+          estimated_price_min: selected?.price,
+          estimated_price_max: selected?.price,
+        }),
+      });
+
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Failed to create booking');
+      }
+
+      setSubmitted(true);
+      toast.success('Booking confirmed! Check your email for details.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to submit booking.';
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   if (submitted) {
@@ -202,12 +274,12 @@ export default function BookingWizard() {
             <span className="text-white font-semibold text-sm">{watchDate} at {watchTime}</span>
           </div>
         </div>
-        <a
+        <Link
           href="/"
           className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-[#e84c1a] text-white font-bold hover:bg-[#ff6b35] transition-colors"
         >
           Back to Home
-        </a>
+        </Link>
       </motion.div>
     );
   }
@@ -465,13 +537,13 @@ export default function BookingWizard() {
                   {[
                     { label: 'Service', value: selectedService?.label, accent: true },
                     { label: 'Estimated Price', value: selectedService?.price ? `Starting at $${selectedService.price}` : 'Quoted on-site' },
-                    { label: 'Date', value: watch('scheduled_date') },
-                    { label: 'Time', value: watch('scheduled_time') },
-                    { label: 'Location', value: `${watch('address')}, ${watch('city')}, AZ ${watch('zip')}` },
-                    { label: 'Vehicle', value: `${watch('vehicle_year')} ${watch('vehicle_make')} ${watch('vehicle_model')}` },
-                    { label: 'Name', value: `${watch('first_name')} ${watch('last_name')}` },
-                    { label: 'Email', value: watch('email') },
-                    { label: 'Phone', value: watch('phone') },
+                    { label: 'Date', value: watchDate },
+                    { label: 'Time', value: watchTime },
+                    { label: 'Location', value: `${watchAddress}, ${watchCity}, AZ ${watchZip}` },
+                    { label: 'Vehicle', value: `${watchVehicleYear} ${watchVehicleMake} ${watchVehicleModel}` },
+                    { label: 'Name', value: `${watchFirstName} ${watchLastName}` },
+                    { label: 'Email', value: watchEmail },
+                    { label: 'Phone', value: watchPhone },
                   ].map(({ label, value, accent }) => (
                     <div
                       key={label}

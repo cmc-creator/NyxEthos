@@ -295,3 +295,4 @@ create index if not exists idx_contact_rate_limits_ip_hash_created_at
   on public.contact_rate_limits(ip_hash, created_at desc);
 
 alter table public.contact_rate_limits enable row level security;
+

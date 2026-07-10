@@ -1,59 +1,37 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calendar,
   Car,
   Clock,
-  Filter,
   ChevronDown,
   MapPin,
   Phone,
   X,
 } from 'lucide-react';
-import { cn, formatCurrency, formatDate } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import Navbar from '@/components/layout/Navbar';
 
-const mockBookings = [
-  {
-    id: '1',
-    service: 'Full Synthetic Oil Change',
-    status: 'confirmed' as const,
-    date: '2026-05-10',
-    time: '10:00 AM',
-    vehicle: '2020 Honda CR-V',
-    vin: '2HKRW2H56LH123456',
-    address: '1234 W McDowell Rd, Phoenix, AZ 85007',
-    notes: 'Please arrive through the side gate.',
-    amount: 75,
-  },
-  {
-    id: '2',
-    service: 'Brake Pad Replacement (Front)',
-    status: 'completed' as const,
-    date: '2026-04-15',
-    time: '2:00 PM',
-    vehicle: '2020 Honda CR-V',
-    vin: '2HKRW2H56LH123456',
-    address: '1234 W McDowell Rd, Phoenix, AZ 85007',
-    notes: '',
-    amount: 120,
-  },
-  {
-    id: '3',
-    service: 'AC Recharge & Performance Check',
-    status: 'completed' as const,
-    date: '2026-03-05',
-    time: '9:00 AM',
-    vehicle: '2020 Honda CR-V',
-    vin: '2HKRW2H56LH123456',
-    address: '1234 W McDowell Rd, Phoenix, AZ 85007',
-    notes: '',
-    amount: 95,
-  },
-];
+type BookingItem = {
+  id: string;
+  service_name: string;
+  status: 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
+  scheduled_date: string;
+  scheduled_time: string;
+  vehicle_year: string;
+  vehicle_make: string;
+  vehicle_model: string;
+  vehicle_vin?: string | null;
+  address: string;
+  city: string;
+  zip: string;
+  notes?: string | null;
+  total_amount: number;
+  estimated_price_max?: number | null;
+};
 
 type BookingStatus = 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
 
@@ -70,8 +48,28 @@ const filters = ['All', 'Confirmed', 'Completed', 'Pending', 'Cancelled'];
 export default function BookingsPage() {
   const [activeFilter, setActiveFilter] = useState('All');
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [bookings, setBookings] = useState<BookingItem[]>([]);
 
-  const filtered = mockBookings.filter((b) =>
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadBookings() {
+      const response = await fetch('/api/bookings');
+      if (!response.ok || !isMounted) {
+        return;
+      }
+
+      const payload = await response.json();
+      setBookings(payload.bookings || []);
+    }
+
+    loadBookings();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const filtered = bookings.filter((b) =>
     activeFilter === 'All' ? true : statusConfig[b.status].label === activeFilter
   );
 
@@ -143,7 +141,7 @@ export default function BookingsPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-white font-semibold text-sm">{b.service}</span>
+                      <span className="text-white font-semibold text-sm">{b.service_name}</span>
                       <span className={cn('text-xs px-2 py-0.5 rounded-full font-semibold flex items-center gap-1', cfg.bg, cfg.color)}>
                         <span className={cn('w-1.5 h-1.5 rounded-full', cfg.dot)} />
                         {cfg.label}
@@ -152,16 +150,16 @@ export default function BookingsPage() {
                     <div className="flex items-center gap-3 mt-1 text-[#7a8fb5] text-xs">
                       <span className="flex items-center gap-1">
                         <Clock size={10} />
-                        {b.date} at {b.time}
+                        {b.scheduled_date} at {b.scheduled_time}
                       </span>
                       <span className="flex items-center gap-1">
                         <Car size={10} />
-                        {b.vehicle}
+                        {b.vehicle_year} {b.vehicle_make} {b.vehicle_model}
                       </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 flex-shrink-0">
-                    <span className="text-white font-bold">{formatCurrency(b.amount)}</span>
+                    <span className="text-white font-bold">{formatCurrency(b.total_amount || b.estimated_price_max || 0)}</span>
                     <ChevronDown
                       size={16}
                       className={cn('text-[#7a8fb5] transition-transform', isOpen && 'rotate-180')}
@@ -185,7 +183,7 @@ export default function BookingsPage() {
                             <span className="text-[#7a8fb5] text-xs uppercase tracking-wider">Address</span>
                             <p className="text-white text-sm mt-1 flex items-start gap-1.5">
                               <MapPin size={13} className="text-[#e84c1a] mt-0.5 flex-shrink-0" />
-                              {b.address}
+                              {b.address}, {b.city}, {b.zip}
                             </p>
                           </div>
                           {b.notes && (
@@ -198,7 +196,7 @@ export default function BookingsPage() {
                         <div className="space-y-3">
                           <div>
                             <span className="text-[#7a8fb5] text-xs uppercase tracking-wider">Vehicle VIN</span>
-                            <p className="text-white text-sm mt-1 font-mono">{b.vin}</p>
+                            <p className="text-white text-sm mt-1 font-mono">{b.vehicle_vin || 'N/A'}</p>
                           </div>
                           <div className="flex gap-2 pt-1">
                             {b.status === 'confirmed' && (

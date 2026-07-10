@@ -1,61 +1,32 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileText, Download, ChevronDown, CreditCard, Check } from 'lucide-react';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import Navbar from '@/components/layout/Navbar';
 import { InvoiceTemplate, type InvoiceData } from '@/components/invoice/InvoiceTemplate';
 
-const mockInvoices: InvoiceData[] = [
-  {
-    id: '1',
-    number: 'AD-029847',
-    date: '2026-04-15',
-    dueDate: '2026-04-29',
-    status: 'paid',
-    customer: {
-      name: 'John Smith',
-      email: 'john@example.com',
-      phone: '(602) 555-0101',
-      address: '1234 W McDowell Rd, Phoenix, AZ 85007',
-    },
-    vehicle: { year: '2020', make: 'Honda', model: 'CR-V', vin: '2HKRW2H56LH123456' },
-    items: [
-      { description: 'Brake Pad Replacement (Front) — OEM Parts', qty: 1, unitPrice: 99 },
-      { description: 'Labor — 2hrs', qty: 2, unitPrice: 60 },
-    ],
-    tax: 8.6,
-    notes: 'Rear pads are at ~40% — recommend replacement within 6 months.',
-  },
-  {
-    id: '2',
-    number: 'AD-028130',
-    date: '2026-03-10',
-    dueDate: '2026-03-24',
-    status: 'paid',
-    customer: {
-      name: 'John Smith',
-      email: 'john@example.com',
-      phone: '(602) 555-0101',
-      address: '1234 W McDowell Rd, Phoenix, AZ 85007',
-    },
-    vehicle: { year: '2020', make: 'Honda', model: 'CR-V', vin: '2HKRW2H56LH123456' },
-    items: [
-      { description: 'Full Synthetic Oil Change (5W-30, 6qt)', qty: 1, unitPrice: 65 },
-      { description: 'Oil Filter', qty: 1, unitPrice: 10 },
-    ],
-    tax: 8.6,
-    notes: '',
-  },
-];
+type InvoiceRow = {
+  id: string;
+  invoice_number: string;
+  created_at: string;
+  due_date: string | null;
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+  customer_name?: string | null;
+  customer_email?: string | null;
+  customer_phone?: string | null;
+  items?: Array<{ description: string; quantity: number; unit_price: number }>;
+  tax_rate?: number;
+  notes?: string | null;
+};
 
 const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
   draft: { label: 'Draft', color: 'text-[#94a3b8]', bg: 'bg-[#94a3b8]/10' },
   sent: { label: 'Sent', color: 'text-blue-400', bg: 'bg-blue-400/10' },
   paid: { label: 'Paid', color: 'text-green-400', bg: 'bg-green-400/10' },
   overdue: { label: 'Overdue', color: 'text-red-400', bg: 'bg-red-400/10' },
+  cancelled: { label: 'Cancelled', color: 'text-red-400', bg: 'bg-red-400/10' },
 };
 
 async function printInvoice(invoiceId: string) {
@@ -65,6 +36,26 @@ async function printInvoice(invoiceId: string) {
 
 export default function InvoicesPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadInvoices() {
+      const response = await fetch('/api/invoices');
+      if (!response.ok || !isMounted) {
+        return;
+      }
+
+      const payload = await response.json();
+      setInvoices(payload.invoices || []);
+    }
+
+    loadInvoices();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <div className="min-h-screen hex-pattern">
@@ -78,11 +69,39 @@ export default function InvoicesPage() {
 
         {/* Invoices list */}
         <div className="space-y-3">
-          {mockInvoices.map((inv) => {
+          {invoices.map((inv) => {
             const cfg = statusConfig[inv.status];
             const isOpen = expanded === inv.id;
-            const subtotal = inv.items.reduce((s, i) => s + i.qty * i.unitPrice, 0);
-            const total = subtotal * (1 + inv.tax / 100);
+            const items = (inv.items || []).map((i) => ({
+              description: i.description,
+              qty: i.quantity,
+              unitPrice: i.unit_price,
+            }));
+            const subtotal = items.reduce((s, i) => s + i.qty * i.unitPrice, 0);
+            const taxPercent = (inv.tax_rate || 0) * 100;
+            const total = subtotal * (1 + taxPercent / 100);
+            const invoiceData: InvoiceData = {
+              id: inv.id,
+              number: inv.invoice_number,
+              date: inv.created_at,
+              dueDate: inv.due_date || inv.created_at,
+              status: inv.status === 'cancelled' ? 'draft' : inv.status,
+              customer: {
+                name: inv.customer_name || 'Customer',
+                email: inv.customer_email || 'N/A',
+                phone: inv.customer_phone || 'N/A',
+                address: 'Address on file',
+              },
+              vehicle: {
+                year: '',
+                make: '',
+                model: '',
+                vin: '',
+              },
+              items,
+              tax: taxPercent,
+              notes: inv.notes || '',
+            };
 
             return (
               <motion.div key={inv.id} layout className="glass-card rounded-2xl overflow-hidden">
@@ -96,15 +115,15 @@ export default function InvoicesPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-white font-bold text-sm font-mono">{inv.number}</span>
+                      <span className="text-white font-bold text-sm font-mono">{inv.invoice_number}</span>
                       <span className={cn('text-xs px-2 py-0.5 rounded-full font-semibold', cfg.bg, cfg.color)}>
                         {cfg.label}
                       </span>
                     </div>
                     <div className="text-[#7a8fb5] text-xs mt-0.5">
-                      {inv.items.map((i) => i.description).join(', ')}
+                      {items.map((i) => i.description).join(', ') || 'Invoice items'}
                     </div>
-                    <div className="text-[#7a8fb5] text-xs mt-0.5">{formatDate(inv.date)}</div>
+                    <div className="text-[#7a8fb5] text-xs mt-0.5">{formatDate(inv.created_at)}</div>
                   </div>
                   <div className="flex items-center gap-3 flex-shrink-0">
                     <span className="text-white font-bold">{formatCurrency(total)}</span>
@@ -152,7 +171,7 @@ export default function InvoicesPage() {
                         {/* Invoice preview (light-themed) */}
                         <div className="overflow-auto">
                           <div className="origin-top scale-75 sm:scale-90 lg:scale-100 transform-gpu">
-                            <InvoiceTemplate invoice={inv} />
+                            <InvoiceTemplate invoice={invoiceData} />
                           </div>
                         </div>
                       </div>

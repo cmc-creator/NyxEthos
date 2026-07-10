@@ -1,64 +1,43 @@
 'use client';
 
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
   Calendar,
   FileText,
   Car,
   User,
-  LogOut,
   Plus,
   ChevronRight,
   Clock,
   CheckCircle2,
-  AlertCircle,
   Bell,
 } from 'lucide-react';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import Navbar from '@/components/layout/Navbar';
 
-// Mock data — replace with Supabase queries
-const mockBookings = [
-  {
-    id: '1',
-    service: 'Full Synthetic Oil Change',
-    status: 'confirmed' as const,
-    date: '2026-05-10',
-    time: '10:00 AM',
-    vehicle: '2020 Honda CR-V',
-    amount: 75,
-  },
-  {
-    id: '2',
-    service: 'Brake Pad Replacement (Front)',
-    status: 'completed' as const,
-    date: '2026-04-15',
-    time: '2:00 PM',
-    vehicle: '2020 Honda CR-V',
-    amount: 120,
-  },
-];
+type DashboardBooking = {
+  id: string;
+  service_name: string;
+  status: 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
+  scheduled_date: string;
+  scheduled_time: string;
+  vehicle_year: string;
+  vehicle_make: string;
+  vehicle_model: string;
+  estimated_price_max: number | null;
+  total_amount: number;
+  guest_name?: string | null;
+};
 
-const mockInvoices = [
-  {
-    id: '1',
-    number: 'AD-029847',
-    service: 'Brake Pad Replacement (Front)',
-    date: '2026-04-15',
-    total: 120,
-    status: 'paid' as const,
-  },
-  {
-    id: '2',
-    number: 'AD-028130',
-    service: 'Full Synthetic Oil Change',
-    date: '2026-03-10',
-    total: 75,
-    status: 'paid' as const,
-  },
-];
+type DashboardInvoice = {
+  id: string;
+  invoice_number: string;
+  created_at: string;
+  total: number;
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+};
 
 const statusConfig = {
   pending: { label: 'Pending', color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
@@ -86,7 +65,51 @@ function FadeIn({ children, delay = 0, className = '' }: { children: React.React
 }
 
 export default function DashboardPage() {
-  const customerName = 'John'; // Replace with actual auth user
+  const [bookings, setBookings] = useState<DashboardBooking[]>([]);
+  const [invoices, setInvoices] = useState<DashboardInvoice[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadData() {
+      const [bookingsRes, invoicesRes] = await Promise.all([
+        fetch('/api/bookings'),
+        fetch('/api/invoices'),
+      ]);
+
+      if (!isMounted) {
+        return;
+      }
+
+      if (bookingsRes.ok) {
+        const payload = await bookingsRes.json();
+        setBookings(payload.bookings || []);
+      }
+
+      if (invoicesRes.ok) {
+        const payload = await invoicesRes.json();
+        setInvoices(payload.invoices || []);
+      }
+    }
+
+    loadData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const customerName = useMemo(() => {
+    const name = bookings.find((b) => b.guest_name)?.guest_name;
+    if (!name) {
+      return 'there';
+    }
+    return name.split(' ')[0] || 'there';
+  }, [bookings]);
+
+  const upcomingCount = bookings.filter((b) => ['pending', 'confirmed', 'in_progress'].includes(b.status)).length;
+  const totalSpent = invoices.filter((inv) => inv.status === 'paid').reduce((sum, inv) => sum + (inv.total || 0), 0);
+  const vehicles = new Set(bookings.map((b) => `${b.vehicle_year}-${b.vehicle_make}-${b.vehicle_model}`));
 
   return (
     <div className="min-h-screen hex-pattern">
@@ -118,10 +141,10 @@ export default function DashboardPage() {
         {/* Stats cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {[
-            { label: 'Total Services', value: '3', icon: Car, color: '#e84c1a' },
-            { label: 'Upcoming', value: '1', icon: Calendar, color: '#3b82f6' },
-            { label: 'Invoices', value: '2', icon: FileText, color: '#10b981' },
-            { label: 'Total Spent', value: '$195', icon: CheckCircle2, color: '#eab308' },
+            { label: 'Total Vehicles', value: String(vehicles.size), icon: Car, color: '#e84c1a' },
+            { label: 'Upcoming', value: String(upcomingCount), icon: Calendar, color: '#3b82f6' },
+            { label: 'Invoices', value: String(invoices.length), icon: FileText, color: '#10b981' },
+            { label: 'Total Spent', value: formatCurrency(totalSpent), icon: CheckCircle2, color: '#eab308' },
           ].map(({ label, value, icon: Icon, color }, i) => (
             <FadeIn key={label} delay={i * 0.07}>
               <div className="glass-card rounded-2xl p-5">
@@ -152,7 +175,7 @@ export default function DashboardPage() {
                 </Link>
               </div>
               <div className="divide-y divide-[#1e3260]/30">
-                {mockBookings.map((b) => {
+                {bookings.slice(0, 5).map((b) => {
                   const cfg = statusConfig[b.status];
                   return (
                     <div key={b.id} className="flex items-start gap-4 px-6 py-5">
@@ -160,20 +183,20 @@ export default function DashboardPage() {
                         <Car size={16} className="text-[#94a3b8]" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-white text-sm font-semibold truncate">{b.service}</div>
-                        <div className="text-[#7a8fb5] text-xs mt-0.5">{b.vehicle}</div>
+                        <div className="text-white text-sm font-semibold truncate">{b.service_name}</div>
+                        <div className="text-[#7a8fb5] text-xs mt-0.5">{b.vehicle_year} {b.vehicle_make} {b.vehicle_model}</div>
                         <div className="flex items-center gap-2 mt-1.5">
                           <span className={cn('text-xs px-2 py-0.5 rounded-full font-semibold', cfg.bg, cfg.color)}>
                             {cfg.label}
                           </span>
                           <span className="text-[#7a8fb5] text-xs flex items-center gap-1">
                             <Clock size={10} />
-                            {b.date} at {b.time}
+                            {b.scheduled_date} at {b.scheduled_time}
                           </span>
                         </div>
                       </div>
                       <div className="text-white font-bold text-sm flex-shrink-0">
-                        {formatCurrency(b.amount)}
+                        {formatCurrency(b.total_amount || b.estimated_price_max || 0)}
                       </div>
                     </div>
                   );
@@ -195,7 +218,7 @@ export default function DashboardPage() {
                 </Link>
               </div>
               <div className="divide-y divide-[#1e3260]/30">
-                {mockInvoices.map((inv) => {
+                {invoices.slice(0, 5).map((inv) => {
                   const cfg = statusConfig[inv.status as keyof typeof statusConfig];
                   return (
                     <div key={inv.id} className="flex items-center gap-4 px-6 py-5">
@@ -203,13 +226,13 @@ export default function DashboardPage() {
                         <FileText size={16} className="text-[#94a3b8]" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-white text-sm font-semibold">{inv.number}</div>
-                        <div className="text-[#7a8fb5] text-xs truncate">{inv.service}</div>
+                        <div className="text-white text-sm font-semibold">{inv.invoice_number}</div>
+                        <div className="text-[#7a8fb5] text-xs truncate">Service invoice</div>
                         <div className="flex items-center gap-2 mt-1">
                           <span className={cn('text-xs px-2 py-0.5 rounded-full font-semibold', cfg?.bg, cfg?.color)}>
                             {cfg?.label}
                           </span>
-                          <span className="text-[#7a8fb5] text-xs">{formatDate(inv.date)}</span>
+                          <span className="text-[#7a8fb5] text-xs">{formatDate(inv.created_at)}</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-3 flex-shrink-0">

@@ -34,6 +34,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
 
+  const { data: existingEvent } = await supabaseAdmin
+    .from('stripe_webhook_events')
+    .select('id')
+    .eq('id', event.id)
+    .maybeSingle();
+
+  if (existingEvent) {
+    return NextResponse.json({ received: true, deduplicated: true });
+  }
+
+  const { error: eventInsertError } = await supabaseAdmin
+    .from('stripe_webhook_events')
+    .insert({
+      id: event.id,
+      event_type: event.type,
+    });
+
+  if (eventInsertError) {
+    console.error('Failed to store webhook event id:', eventInsertError);
+    return NextResponse.json({ error: 'Webhook dedupe failure' }, { status: 500 });
+  }
+
   switch (event.type) {
     case 'payment_intent.succeeded': {
       const pi = event.data.object as Stripe.PaymentIntent;
@@ -53,14 +75,22 @@ export async function POST(req: NextRequest) {
           console.error('Failed to mark invoice paid:', error);
         }
 
-        // Also insert into payments table
-        await supabaseAdmin.from('payments').insert({
-          invoice_id: invoiceId,
-          amount: pi.amount / 100,
-          currency: pi.currency,
-          stripe_payment_intent_id: pi.id,
-          status: 'succeeded',
-        });
+        const { data: existingPayment } = await supabaseAdmin
+          .from('payments')
+          .select('id')
+          .eq('stripe_payment_id', pi.id)
+          .maybeSingle();
+
+        if (!existingPayment) {
+          await supabaseAdmin.from('payments').insert({
+            invoice_id: invoiceId,
+            amount: pi.amount / 100,
+            currency: pi.currency,
+            stripe_payment_id: pi.id,
+            status: 'succeeded',
+          });
+        }
+
       }
       break;
     }
@@ -69,13 +99,22 @@ export async function POST(req: NextRequest) {
       const pi = event.data.object as Stripe.PaymentIntent;
       const invoiceId = pi.metadata?.invoice_id;
       if (invoiceId) {
-        await supabaseAdmin.from('payments').insert({
-          invoice_id: invoiceId,
-          amount: pi.amount / 100,
-          currency: pi.currency,
-          stripe_payment_intent_id: pi.id,
-          status: 'failed',
-        });
+        const { data: existingPayment } = await supabaseAdmin
+          .from('payments')
+          .select('id')
+          .eq('stripe_payment_id', pi.id)
+          .maybeSingle();
+
+        if (!existingPayment) {
+          await supabaseAdmin.from('payments').insert({
+            invoice_id: invoiceId,
+            amount: pi.amount / 100,
+            currency: pi.currency,
+            stripe_payment_id: pi.id,
+            status: 'failed',
+          });
+        }
+
       }
       break;
     }

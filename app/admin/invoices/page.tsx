@@ -1,49 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { FileText, Plus, Download, ChevronDown, CreditCard, Send, Check } from 'lucide-react';
+import { FileText, Plus, Download, ChevronDown, Send, Check } from 'lucide-react';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { InvoiceTemplate, type InvoiceData } from '@/components/invoice/InvoiceTemplate';
 
 type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue';
-
-const mockInvoices: InvoiceData[] = [
-  {
-    id: '1', number: 'AD-029847', date: '2026-04-15', dueDate: '2026-04-29', status: 'paid',
-    customer: { name: 'John Smith', email: 'john@example.com', phone: '(602) 555-0101', address: '1234 W McDowell Rd, Phoenix, AZ 85007' },
-    vehicle: { year: '2020', make: 'Honda', model: 'CR-V', vin: '2HKRW2H56LH123456' },
-    items: [
-      { description: 'Brake Pad Replacement (Front)', qty: 1, unitPrice: 99 },
-      { description: 'Labor (2hrs @ $60)', qty: 2, unitPrice: 60 },
-    ],
-    tax: 8.6,
-    notes: 'Rear pads at 40% — recommend replacement in 6 months.',
-  },
-  {
-    id: '2', number: 'AD-030002', date: '2026-05-09', dueDate: '2026-05-23', status: 'sent',
-    customer: { name: 'Maria Garcia', email: 'maria@example.com', phone: '(480) 555-0202', address: '890 E Broadway Rd, Tempe, AZ 85281' },
-    vehicle: { year: '2018', make: 'Toyota', model: 'Camry', vin: 'JTNB11HK8J3012345' },
-    items: [
-      { description: 'Brake Pad Replacement (Front + Rear)', qty: 1, unitPrice: 180 },
-    ],
-    tax: 8.6,
-    notes: '',
-  },
-  {
-    id: '3', number: 'AD-030010', date: '2026-05-10', dueDate: '2026-05-24', status: 'draft',
-    customer: { name: 'David Lee', email: 'david@example.com', phone: '(623) 555-0303', address: '5678 W Thomas Rd, Glendale, AZ 85301' },
-    vehicle: { year: '2019', make: 'Ford', model: 'F-150', vin: '1FTFW1E51KFC12345' },
-    items: [
-      { description: 'AC Recharge (R-134a, 1.5lb)', qty: 1, unitPrice: 75 },
-      { description: 'AC Performance Check', qty: 1, unitPrice: 20 },
-    ],
-    tax: 8.6,
-    notes: '',
-  },
-];
 
 const statusConfig: Record<InvoiceStatus, { label: string; color: string; bg: string }> = {
   draft: { label: 'Draft', color: 'text-[#94a3b8]', bg: 'bg-[#94a3b8]/10' },
@@ -53,11 +18,40 @@ const statusConfig: Record<InvoiceStatus, { label: string; color: string; bg: st
 };
 
 export default function AdminInvoicesPage() {
-  const [invoices, setInvoices] = useState(mockInvoices);
+  const [invoices, setInvoices] = useState<InvoiceData[]>([]);
   const [expanded, setExpanded] = useState<string | null>(null);
 
-  const markAs = (id: string, newStatus: InvoiceStatus) => {
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadInvoices() {
+      const response = await fetch('/api/admin/invoices');
+      if (!response.ok || !isMounted) {
+        return;
+      }
+      const payload = await response.json();
+      setInvoices(payload.invoices || []);
+    }
+
+    loadInvoices();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const markAs = async (id: string, newStatus: InvoiceStatus) => {
+    const previous = invoices;
     setInvoices((prev) => prev.map((inv) => inv.id === id ? { ...inv, status: newStatus } : inv));
+
+    const response = await fetch(`/api/admin/invoices/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus }),
+    });
+
+    if (!response.ok) {
+      setInvoices(previous);
+    }
   };
 
   return (

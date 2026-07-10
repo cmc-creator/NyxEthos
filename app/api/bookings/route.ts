@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 import { z } from 'zod';
 
 const bookingSchema = z.object({
-  service_id: z.string().uuid().optional(),
+  service_id: z.string().optional(),
   service_name: z.string().min(1),
   customer: z.object({
     first_name: z.string().min(1),
@@ -18,9 +18,11 @@ const bookingSchema = z.object({
     model: z.string().min(1),
     vin: z.string().optional(),
   }),
-  appointment_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  appointment_time: z.string().min(1),
+  scheduled_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  scheduled_time: z.string().min(1),
   address: z.string().min(5),
+  city: z.string().min(2),
+  zip: z.string().regex(/^\d{5}$/),
   notes: z.string().optional(),
   estimated_price_min: z.number().optional(),
   estimated_price_max: z.number().optional(),
@@ -58,7 +60,7 @@ export async function POST(req: NextRequest) {
     const data = parsed.data;
     const supabase = await createSupabaseServer();
 
-    // Get or create customer
+    // Get or create customer profile for this booking.
     let customerId: string | null = null;
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -71,10 +73,29 @@ export async function POST(req: NextRequest) {
 
       if (existingCustomer) {
         customerId = existingCustomer.id;
+      } else {
+        const { data: createdCustomer, error: upsertErr } = await supabase
+          .from('customers')
+          .insert({
+            user_id: user.id,
+            first_name: data.customer.first_name,
+            last_name: data.customer.last_name,
+            email: data.customer.email,
+            phone: data.customer.phone,
+          })
+          .select('id')
+          .single();
+
+        if (upsertErr || !createdCustomer) {
+          console.error('Customer upsert error:', upsertErr);
+          return NextResponse.json({ error: 'Failed to create customer profile' }, { status: 500 });
+        }
+
+        customerId = createdCustomer.id;
       }
     }
 
-    // If no linked customer, look up by email
+    // Guest fallback: use existing customer by email, or create a new guest customer.
     if (!customerId) {
       const { data: byEmail } = await supabase
         .from('customers')
@@ -107,22 +128,29 @@ export async function POST(req: NextRequest) {
     }
 
     // Insert booking
+    const parsedServiceId = z.string().uuid().safeParse(data.service_id);
+
     const { data: booking, error: bookingErr } = await supabase
       .from('bookings')
       .insert({
         customer_id: customerId,
-        service_id: data.service_id ?? null,
+        service_id: parsedServiceId.success ? parsedServiceId.data : null,
         service_name: data.service_name,
         vehicle_year: data.vehicle.year,
         vehicle_make: data.vehicle.make,
         vehicle_model: data.vehicle.model,
         vehicle_vin: data.vehicle.vin ?? null,
-        appointment_date: data.appointment_date,
-        appointment_time: data.appointment_time,
+        scheduled_date: data.scheduled_date,
+        scheduled_time: data.scheduled_time,
         address: data.address,
+        city: data.city,
+        zip: data.zip,
         notes: data.notes ?? null,
         estimated_price_min: data.estimated_price_min ?? null,
         estimated_price_max: data.estimated_price_max ?? null,
+        guest_name: `${data.customer.first_name} ${data.customer.last_name}`.trim(),
+        guest_email: data.customer.email,
+        guest_phone: data.customer.phone,
         status: 'pending',
       })
       .select('id')
@@ -140,7 +168,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   const supabase = await createSupabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -162,7 +190,7 @@ export async function GET(req: NextRequest) {
     .from('bookings')
     .select('*')
     .eq('customer_id', customer.id)
-    .order('appointment_date', { ascending: false });
+    .order('scheduled_date', { ascending: false });
 
   if (error) {
     return NextResponse.json({ error: 'Failed to fetch bookings' }, { status: 500 });

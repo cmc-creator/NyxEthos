@@ -1,34 +1,35 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
   Search,
-  Filter,
   ChevronDown,
   MapPin,
   Phone,
   Car,
   Clock,
-  CheckCircle2,
-  XCircle,
-  Edit2,
   FileText,
 } from 'lucide-react';
-import { cn, formatCurrency, formatDate } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import AdminLayout from '@/components/admin/AdminLayout';
 
 type JobStatus = 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
 
-const allJobs = [
-  { id: '1', customer: 'John Smith', phone: '(602) 555-0101', service: 'Full Synthetic Oil Change', vehicle: '2020 Honda CR-V', address: '1234 W McDowell Rd, Phoenix', date: '2026-05-10', time: '10:00 AM', status: 'confirmed' as JobStatus, amount: 75, notes: '' },
-  { id: '2', customer: 'Maria Garcia', phone: '(480) 555-0202', service: 'Brake Pad Replacement (Front)', vehicle: '2018 Toyota Camry', address: '890 E Broadway Rd, Tempe', date: '2026-05-09', time: '9:00 AM', status: 'in_progress' as JobStatus, amount: 180, notes: 'Customer noted grinding noise' },
-  { id: '3', customer: 'David Lee', phone: '(623) 555-0303', service: 'AC Recharge & Performance Check', vehicle: '2019 Ford F-150', address: '5678 W Thomas Rd, Glendale', date: '2026-05-10', time: '11:30 AM', status: 'confirmed' as JobStatus, amount: 95, notes: '' },
-  { id: '4', customer: 'Sarah Johnson', phone: '(480) 555-0404', service: 'Battery Replacement & Test', vehicle: '2021 Chevrolet Equinox', address: '3456 S Mill Ave, Tempe', date: '2026-05-11', time: '2:00 PM', status: 'pending' as JobStatus, amount: 140, notes: '' },
-  { id: '5', customer: 'Tom Wilson', phone: '(602) 555-0505', service: 'Check Engine Diagnostics', vehicle: '2017 Nissan Altima', address: '7890 N 7th St, Phoenix', date: '2026-05-08', time: '2:00 PM', status: 'completed' as JobStatus, amount: 65, notes: 'P0420 code — catalyst monitor' },
-  { id: '6', customer: 'Amy Chen', phone: '(480) 555-0606', service: 'Full Synthetic Oil Change', vehicle: '2022 Subaru Outback', address: '234 N Scottsdale Rd, Scottsdale', date: '2026-05-07', time: '9:30 AM', status: 'completed' as JobStatus, amount: 85, notes: '' },
-];
+type AdminJob = {
+  id: string;
+  customer: string;
+  phone: string;
+  service: string;
+  vehicle: string;
+  address: string;
+  date: string;
+  time: string;
+  status: JobStatus;
+  amount: number;
+  notes: string;
+};
 
 const statusConfig: Record<JobStatus, { label: string; color: string; bg: string; nextStates: JobStatus[] }> = {
   pending: { label: 'Pending', color: 'text-yellow-400', bg: 'bg-yellow-400/10', nextStates: ['confirmed', 'cancelled'] },
@@ -41,8 +42,26 @@ const statusConfig: Record<JobStatus, { label: string; color: string; bg: string
 export default function AdminJobsPage() {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | JobStatus>('all');
-  const [jobs, setJobs] = useState(allJobs);
+  const [jobs, setJobs] = useState<AdminJob[]>([]);
   const [expanded, setExpanded] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadJobs() {
+      const response = await fetch('/api/admin/jobs');
+      if (!response.ok || !isMounted) {
+        return;
+      }
+      const payload = await response.json();
+      setJobs(payload.jobs || []);
+    }
+
+    loadJobs();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const filtered = jobs.filter((j) => {
     const matchSearch =
@@ -53,8 +72,19 @@ export default function AdminJobsPage() {
     return matchSearch && matchStatus;
   });
 
-  const updateStatus = (id: string, newStatus: JobStatus) => {
+  const updateStatus = async (id: string, newStatus: JobStatus) => {
+    const previous = jobs;
     setJobs((prev) => prev.map((j) => (j.id === id ? { ...j, status: newStatus } : j)));
+
+    const response = await fetch(`/api/admin/jobs/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus }),
+    });
+
+    if (!response.ok) {
+      setJobs(previous);
+    }
   };
 
   const filters: { label: string; value: 'all' | JobStatus }[] = [

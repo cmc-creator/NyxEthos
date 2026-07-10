@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Plus, Clock } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
 import AdminLayout from '@/components/admin/AdminLayout';
@@ -24,21 +25,14 @@ const statusConfig: Record<JobStatus, { color: string; bg: string; border: strin
   completed: { color: 'text-green-400', bg: 'bg-green-400/10', border: 'border-green-400/30' },
 };
 
-// Mock schedule data keyed by YYYY-MM-DD
-const schedule: Record<string, CalendarJob[]> = {
-  '2026-05-09': [
-    { id: '1', customer: 'Maria Garcia', service: 'Brake Replacement', time: '9:00 AM', duration: 2, status: 'in_progress', amount: 180 },
-  ],
-  '2026-05-10': [
-    { id: '2', customer: 'John Smith', service: 'Oil Change', time: '10:00 AM', duration: 1, status: 'confirmed', amount: 75 },
-    { id: '3', customer: 'David Lee', service: 'AC Recharge', time: '11:30 AM', duration: 1.5, status: 'confirmed', amount: 95 },
-  ],
-  '2026-05-11': [
-    { id: '4', customer: 'Sarah Johnson', service: 'Battery Replacement', time: '2:00 PM', duration: 1, status: 'pending', amount: 140 },
-  ],
-  '2026-05-12': [
-    { id: '5', customer: 'Tom Wilson', service: 'Diagnostics', time: '9:00 AM', duration: 1, status: 'confirmed', amount: 65 },
-  ],
+type AdminJobResponse = {
+  id: string;
+  customer: string;
+  service: string;
+  date: string;
+  time: string;
+  status: JobStatus;
+  amount: number;
 };
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -61,6 +55,43 @@ export default function AdminCalendarPage() {
   const [selectedDay, setSelectedDay] = useState<string | null>(
     `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`
   );
+  const [jobs, setJobs] = useState<AdminJobResponse[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadJobs() {
+      const response = await fetch('/api/admin/jobs');
+      if (!response.ok || !isMounted) {
+        return;
+      }
+      const payload = await response.json();
+      setJobs(payload.jobs || []);
+    }
+
+    loadJobs();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const schedule = useMemo(() => {
+    return jobs.reduce<Record<string, CalendarJob[]>>((acc, job) => {
+      if (!acc[job.date]) {
+        acc[job.date] = [];
+      }
+      acc[job.date].push({
+        id: job.id,
+        customer: job.customer,
+        service: job.service,
+        time: job.time,
+        duration: 1,
+        status: job.status,
+        amount: job.amount,
+      });
+      return acc;
+    }, {});
+  }, [jobs]);
 
   const daysInMonth = getDaysInMonth(viewYear, viewMonth);
   const firstDayOfMonth = getFirstDayOfMonth(viewYear, viewMonth);
@@ -80,13 +111,13 @@ export default function AdminCalendarPage() {
     <AdminLayout>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-black text-white">Calendar</h1>
-        <a
+        <Link
           href="/booking"
           className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#e84c1a] text-white text-sm font-bold hover:bg-[#ff6b35] transition-colors"
         >
           <Plus size={14} />
           Schedule Job
-        </a>
+        </Link>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
@@ -157,12 +188,12 @@ export default function AdminCalendarPage() {
             <div className="text-center py-10">
               <Clock className="mx-auto text-[#1e3260] mb-2" size={32} />
               <p className="text-[#7a8fb5] text-sm">No appointments</p>
-              <a
+              <Link
                 href="/booking"
                 className="inline-block mt-3 px-4 py-2 rounded-xl bg-[#e84c1a]/10 border border-[#e84c1a]/30 text-[#e84c1a] text-xs font-bold hover:bg-[#e84c1a]/20 transition-colors"
               >
                 + Schedule One
-              </a>
+              </Link>
             </div>
           ) : (
             <div className="space-y-3">
